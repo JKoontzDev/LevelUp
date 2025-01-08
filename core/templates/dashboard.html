@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <meta name="username" content="{{ user.username }}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="NumQuest" content="{{ NumQuest }}">
+
+
+
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<main class="main-content">
+    <section class="quests-panel">
+        <h3>Daily Quests</h3>
+        {% if dQuest %}
+        {% for quest in dQuest %}
+        <div class="task">
+            <span class="questDetails">{{ quest.quest_name }}</span>
+            <input type="checkbox" class="check">
+        </div>
+        {% endfor %}
+        {% else %}
+            <div class="task urgent">
+                <span>All quests completed</span>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="progress-overview">
+        <h3>Progress Overview</h3>
+        <p>Weekly tasks completed: <span id="weeklyCom">{{user.percent_weekly_completed}}%</span></p>
+        <p>Last quest reward:</p>
+        <ul id="rewards">
+            {% if items %}
+            {% for i in items %}
+                <li>{{i}}</li>
+            {% endfor %}
+            {% else %}
+
+                <li>No recent items</li>
+
+            {% endif %}
+
+        </ul>
+    </section>
+
+    <section class="health-tracker">
+        <h3>Health & Motivation</h3>
+        <p>HP: [||||||---]</p>
+        <p>Motivation: [|||||----]</p>
+    </section>
+
+    <section class="quests-panel">
+        <h3>World Map</h3>
+        <a href="{% url 'mapPage' username=user.username %}"><div class="task urgent mapButton"><p>Open Map</p></div></a>
+
+    </section>
+
+    <section class="message-board">
+        <h3>Message Board</h3>
+        <p id="messages">No new messages</p>
+    </section>
+
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+
+</main>
+
+{% endblock %}
+
+
+
+
+
+

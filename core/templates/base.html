@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Josh">
+    <meta name="description" content="LevelUp is a self improvement app that allows users to make a character and have goals that they complete in real life. Finishing these goals allows the player to send their character on quests and level up like a video game.">
+    <meta name="keywords" content="self-improvement, game, LevelUp">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+</head>
+<body>
+    <meta name="exp" content="{{ character.exp }}">
+
+    <div class="wrapper">
+
+
+        <div class="background-animation"></div>
+        <header class="hero">
+            <div class="profile-card">
+                <a href="{% url 'characterPage' username=user.username %}"><img src="{% static 'img/bleach-ichigo-pfp-8.jpg' %}" alt="User Avatar"></a>
+                <div class="info">
+                    <div class="username">{{ character.rank }}</div>
+                    <div class="xp-bar"><div id="fillExp" style="width: {{ character.exp }}%;"></div></div>
+                </div>
+            </div>
+            <div>
+                {% if user.is_authenticated %}
+                <h3>Welcome {{ user }}</h3>
+                {% endif %}
+            </div>
+            <div>
+                {% if user.is_authenticated %}
+                <h3><a href="{% url 'logout' %}">Logout</a></h3>
+                <h3><a href="{% url 'dashboard' username=user.username %}">Dashboard</a></h3>
+
+
+                {% endif %}
+            </div>
+        </header>
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+        <footer class="footer">
+            <button class="challenge-btn">Today's Special Challenge</button>
+        </footer>
+    </div>
+
+</body>
+</html>

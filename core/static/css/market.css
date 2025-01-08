@@ -1,0 +1,70 @@
+
+
+
+.shopkeeper-section {
+     text-align: center;
+     margin-bottom: 20px;
+     color: white;
+}
+ .shopkeeper-portrait {
+     width: 20vw;
+     height: 50vh;
+     border: 3px solid #fff;
+     border-radius: 5px;
+}
+ .market-categories {
+     display: flex;
+     gap: 15px;
+     margin-bottom: 20px;
+}
+ .category-btn {
+     background: #555;
+     color: #fff;
+     border: none;
+     padding: 10px 20px;
+     cursor: pointer;
+     border-radius: 5px;
+}
+ .category-btn:hover {
+     background: #777;
+}
+ .item-display {
+     width: 100%;
+     margin-bottom: 60px;
+}
+ .item-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+     gap: 20px;
+}
+ .item {
+     background: #444;
+     padding: 15px;
+     border-radius: 5px;
+     text-align: center;
+}
+ .buyButton{
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    background-color: #00F5FF;
+    color: black;
+    border: 2px solid #00F5FF;
+    padding: 10px 20px;
+
+
+
+ }
+ .buyButton:hover {
+     animation: glow 1s infinite alternate;
+     transition: opacity 0.8s ease;
+     transform: scale(1.05);
+}
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px #00F5FF, 0 0 10px #00F5FF, 0 0 5px #00F5FF;
+    }
+    100% {
+        box-shadow: 0 0 10px #00F5FF, 0 0 30px #00F5FF, 0 0 10px #00F5FF;
+    }
+}

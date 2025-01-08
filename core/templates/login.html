@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+       <head>
+        <meta charset="UTF-8">
+               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+               <meta name="google-site-verification" content="verification_token">
+               <meta name="author" content="Josh">
+               <meta name="description" content="LevelUp is a self improvement app that allows users to make a character and have goals that they complete in real life. Finishing these goals allows the player to send their character on quests and level up like a video game.">
+               <meta name="keywords" content="self-improvement, game, LevelUp">
+               <meta name="robots" content="index, follow">
+               <meta name="google-site-verification" content="verification_token">
+               <meta http-equiv="Content-Language" content="en">
+               <meta name="theme-color" content="#ffffff">
+               <meta name="mobile-web-app-capable" content="yes">
+               <meta name="apple-mobile-web-app-capable" content="yes">
+               <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+               <title>Login/Register Page</title>
+               {% load static %}
+               <link rel="stylesheet" href="{% static 'css/login.css' %}">
+       </head>
+       <body>
+              <div class="main">
+                     <div class="form-toggle">
+                        <button id="loginBtn" class="btn-toggle active">Login</button>
+                        <button id="registerBtn" class="btn-toggle">Register</button>
+                      </div>
+
+                      <div id="loginForm" class="form-container">
+                        <h2>Login</h2>
+
+                        <form method="POST">
+                            {% csrf_token %}
+
+                          <div class="input-group">
+                            <label for="username">Username</label>
+                              {{ form.username }}
+                          </div>
+                          <div class="input-group">
+                            <label for="password">Password</label>
+                              {{ form.password }}
+
+                          </div>
+                         <button type="submit" class="btn">Submit</button>
+
+                        </form>
+                        <p>Don't have an account? <a class="pointer" id="registerText">Register</a></p>
+                      </div>
+
+                      <div id="registerForm" class="form-container">
+                        <h2>Register</h2>
+                        <form method="POST">
+                          {% csrf_token %}
+
+                          <div class="input-group">
+                            <label for="new-username">Username</label>
+                            {{ reg.username }}
+
+                          </div>
+                            <div class="input-group">
+                            <label>Email</label>
+                            {{ reg.email }}
+
+                          </div>
+                          <div class="input-group">
+                            <label for="{{ reg.password1.id_for_label }}">Password</label>
+                            {{ reg.password1 }}
+                        </div>
+
+                        <div class="input-group">
+                            <label for="{{ reg.password2.id_for_label }}">Confirm Password</label>
+                            {{ reg.password2 }}
+                          </div>
+
+
+
+                          <button type="submit" class="btn">Submit</button>
+                        </form>
+                        <p>Already have an account? <a class="pointer" id="loginText">Login</a></p>
+                      </div>
+
+              </div>
+       <script src="{% static 'js/login.js' %}"></script>
+
+       </body>
+       </html>

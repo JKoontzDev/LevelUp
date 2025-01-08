@@ -1,0 +1,147 @@
+body {
+     margin: 0;
+     font-family: 'Roboto', sans-serif;
+     color: white;
+     background: linear-gradient(to bottom, #1a1a2e, #16213e);
+}
+ .main-content {
+     display: grid;
+     grid-template-columns: auto auto auto;
+     margin: 20px;
+}
+ section {
+     width: 26vw;
+     height: auto;
+     margin: 10px;
+     padding: 20px;
+     background: rgba(0, 0, 0, 0.6);
+     border-radius: 10px;
+     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+ .quests-panel h3, .progress-overview h3, .health-tracker h3 {
+     margin-bottom: 15px;
+}
+ .task {
+     display: flex;
+     justify-content: space-between;
+     margin-bottom: 10px;
+     padding: 10px;
+     border-radius: 5px;
+     background: #16213e;
+     border: 1px solid #00b4d8;
+     transition: opacity 2.8s ease;
+
+
+}
+ .task.urgent {
+     animation: glow 1s infinite alternate;
+     transition: opacity 0.8s ease;
+
+}
+.task.faded{
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+
+}
+.questDetails{
+    cursor: pointer;
+
+}
+
+.questDetailsDel{
+    cursor: pointer;
+    color: white;
+}
+
+ @keyframes glow {
+     from {
+         box-shadow: 0 0 5px #00b4d8;
+    }
+     to {
+         box-shadow: 0 0 15px #00b4d8;
+    }
+}
+.mapButton{
+    cursor: pointer;
+    color: white;
+}
+
+
+
+
+
+
+
+
+
+
+/* 2xl */
+@media (max-width: 1536px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* xl */
+@media (max-width: 1280px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+/* lg */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 768px;
+  }
+
+
+}
+
+/* md */
+@media (max-width: 768px) {
+  .container {
+    max-width: 640px;
+  }
+  .main-content {
+     display: grid;
+     grid-template-columns: auto;
+     margin: 20px;
+ }
+   .quests-panel, .progress-overview, .health-tracker {
+     width: 70vw;
+}
+
+}
+
+/* sm */
+@media (max-width: 640px) {
+  .container {
+    max-width: 475px;
+  }
+  .main-content {
+     display: grid;
+     grid-template-columns: auto;
+     margin: 20px;
+ }
+   .quests-panel, .progress-overview, .health-tracker {
+     width: 70vw;
+}
+
+}
+
+/* xs */
+@media (max-width: 475px) {
+  .container {
+    width: 100%;
+  }
+ .main-content {
+     display: grid;
+     grid-template-columns: auto;
+     margin: 20px;
+ }
+  .quests-panel, .progress-overview, .health-tracker {
+     width: auto;
+}
+}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Market View
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/market.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+
+
+    <main>
+        <div class="shopkeeper-section">
+            <img src="{% static 'img/merchant.jpg' %}" alt="Shopkeeper" class="shopkeeper-portrait">
+            <p class="shopkeeper-greeting" id="shopkeeperText">"Welcome to my shop, traveler! Anything I can help you with?"</p>
+        </div>
+        <div class="market-categories">
+            <button class="category-btn" data-category="armor">Armor</button>
+            <button class="category-btn" data-category="weapons">Weapons</button>
+            <button class="category-btn" data-category="ingredients">Ingredients</button>
+            <button class="category-btn" data-category="misc">Miscellaneous</button>
+        </div>
+        <div class="item-display">
+            <div class="item-grid" id="itemGrid">
+
+            </div>
+        </div>
+    </main>
+
+
+
+    <script src="{% static 'js/market.js' %}"></script>
+
+
+
+{% endblock %}

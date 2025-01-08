@@ -1,0 +1,44 @@
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .models import CustomUser
+
+class CustomUserAdmin(UserAdmin):
+    # Define the fields to display in the admin panel
+    list_display = ('username', 'email', 'level', 'is_staff', 'is_active')  # Adjust fields as needed
+    search_fields = ('username', 'email')  # Allow admin to search by username or email
+    ordering = ('username',)  # Order users by username
+
+    # Add fieldsets for the user model in the admin panel
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal Info', {'fields': ('email', 'level')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important Dates', {'fields': ('last_login', 'date_joined')}),
+    )
+
+    # Add fields when creating a user in the admin panel
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'level', 'is_active', 'is_staff'),
+        }),
+    )
+
+admin.site.register(CustomUser, CustomUserAdmin)
+Explanation of the Code
+
+list_display: Determines the columns shown in the user list on the admin page. You can include any fields from the
+CustomUser model like username, email, and your custom level.
+
+search_fields: Allows admin to search for users using specific fields like username and email.
+
+ordering: Specifies the default sorting order.
+
+fieldsets:
+Defines which fields are displayed when editing a user.
+Includes sections like Personal Info and Permissions.
+
+add_fieldsets:
+Defines the fields shown when creating a new user in the admin panel.
+Useful for custom fields like level.
+UserAdmin: Inherits from Django's built-in UserAdmin to keep core functionality intact.

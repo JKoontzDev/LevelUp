@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+*.log
+*.sqlite3
+db.sqlite3
+.env
+*.env
+
+# Django
+*.db
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.cover
+*.cache
+*.mo
+*.swp
+*.swo
+*.pid
+*.tar.gz
+*.zip
+local_settings.py
+*.secret
+.envrc
+.idea/
+.vscode/
+staticfiles/
+media/
+
+# Flask
+instance/
+.env
+
+# Vue.js
+node_modules/
+dist/
+*.log
+*.cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.map
+
+# Rust
+target/
+Cargo.lock
+
+# General
+.DS_Store
+*.bak
+*.tmp
+*.swp
+Thumbs.db
+
+# Virtual environments
+venv/
+.env/

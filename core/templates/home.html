@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="google-site-verification" content="verification_token">
+        <meta name="author" content="Josh">
+        <meta name="description" content="LevelUp is a self improvement app that allows users to make a character and have goals that they complete in real life. Finishing these goals allows the player to send their character on quests and level up like a video game.">
+        <meta name="keywords" content="self-improvement, game, LevelUp">
+        <meta name="robots" content="index, follow">
+        <meta name="google-site-verification" content="verification_token">
+        <meta http-equiv="Content-Language" content="en">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <title>LevelUp</title>
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    </head>
+    <body>
+        <div class="container">
+            <section class="hero">
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <h1>Level Up Your Life</h1>
+                    <p>Discover a gamified self-care and daily tracker app that transforms your routines into a journey worth exploring. Achieve goals, unlock rewards, and stay motivated every step of the way.</p>
+                    <div class="cta-buttons">
+                        <a href="{% url 'login' %}" class="primary">Get Started</a>
+                        <a href="#features" class="secondary">Learn More</a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="features" class="features-section">
+                <h2>Why Choose Us?</h2>
+                <div class="features">
+                    <div class="feature">
+                        <h3>Gamified Progress</h3>
+                        <p>Track your habits and goals with an engaging leveling system inspired by your favorite games.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Daily Quests</h3>
+                        <p>Complete meaningful tasks each day to gain experience and unlock new features.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>AR Notifications</h3>
+                        <p>Stay immersed with interactive augmented reality features for key reminders and updates.</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="footer">
+                <p>&copy; 2024 Level Up. All rights reserved.</p>
+            </footer>
+        </div>
+    </body>
+</html>
