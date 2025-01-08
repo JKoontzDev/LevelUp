@@ -60,6 +60,7 @@ daily_task_check.forEach((checkbox, index) => {
                     })
                     .then(responseData => {
                         //add items to dashboard
+                        toMessageBoard(responseData.messageBoard);
                         fetch(`/dashboard/${username}/`, {
                             method: 'POST',
                             headers: {
@@ -80,16 +81,15 @@ daily_task_check.forEach((checkbox, index) => {
                                 //console.log(metaTag);
 
                                 if (metaTag.content == 0){
-                                    const finished = `        <h3>Daily Quests</h3>
-                                                <div class="task urgent">
-                                                <span>All quests completed</span>
-                                            </div>`;
-                                    if (questPanel) {
-                                        questPanel.innerHTML = finished;
-                                    } else {
-                                        console.error("Quest panel element not found");
-                                    }
-                                    }
+                                    const divElement = document.createElement('div');
+                                    divElement.className = 'task urgent';
+
+                                    const noQuest = document.createElement('span');
+                                    noQuest.textContent = "All quests completed";
+                                    divElement.appendChild(noQuest);
+
+                                    questPanel.appendChild(divElement);
+                                }
                             })
                             //NumQuest.textContent = responseData
                         //console.log('Server Response:', responseData);
@@ -107,7 +107,7 @@ daily_task_check.forEach((checkbox, index) => {
                             metaTagExp.setAttribute('content', `${responseData.charExp}`); // Set new value to updated exp
                             let expWidth = `${responseData.charExp}`
                             fillExp.style.width = (expWidth) + '%';
-                            //messageBoard.textContent = "You "
+                            //messageHERE
                         }
                     })
                     .catch(error => {
@@ -201,5 +201,11 @@ fetch(`/dashboard/${username}/`, {
 
 // above is used to get the quest details and display them in a <section>
 
+// below is the message board function
+
+function toMessageBoard(message) {
+    messageBoard.textContent = message;
+
+}
 
 
