@@ -15,12 +15,14 @@ def finish_task(index, username):
     character = user.character
 
     # start daily dungeon raid and level up/ gain exp
+    messageBoard = ''
     user.target_num_quests_inc = user.target_num_quests_inc + 1
     if user.target_num_quests_inc == user.target_num_quests:
         character.exp = character.exp + 25
         if character.exp == 100:
             character.exp = 0
             character.level = character.level + 1
+            messageBoard = "You've leveled up! This is proof that your hard work and perseverance are paying off. Keep pushing forward—greater challenges bring even greater rewards!"
             character.save()
             user.save()
         character.save()
@@ -30,7 +32,8 @@ def finish_task(index, username):
     user.completed_quests = user.completed_quests + 1
     user.percent_weekly_completed = round((user.completed_quests / user.weekly_quests_count) * 100)
     if user.percent_weekly_completed >= 100.00:
-        print("Week compelte")
+        #print("Week compelte")
+        messageBoard = "You've conquered the week like a true hero—each day a step closer to your goals. Take pride in your progress and remember, every small victory fuels the next great adventure!"
         user.percent_weekly_completed = 0.00
         user.save()
     user.save()
@@ -51,7 +54,12 @@ def finish_task(index, username):
         if not created:
             backpack_item.quantity += 1
             backpack_item.save()
-    return {'NumberQuest': new_number_of_quests, 'drops': drops, 'charExp': charExp}
+
+
+    if messageBoard == '':
+        return {'NumberQuest': new_number_of_quests, 'drops': drops, 'charExp': charExp}
+    else:
+        return {'NumberQuest': new_number_of_quests, 'drops': drops, 'charExp': charExp, "messageBoard": messageBoard}
 
 
 def get_random_quests(num_quests, username):
@@ -158,7 +166,7 @@ def dashboardPage(requests, username):
     if requests.method == "POST":
         data = json.loads(requests.body.decode('utf-8'))
         message = data.get('message')
-        if message == 'Finish task!':
+        if message == 'Finish task!':  # takes the looped Json from finished_task_route
             NumberQuests = data.get('NumberQuest')
             questID = data.get('questID')
             #print(f"change_noq is {NumberQuests}")
@@ -169,7 +177,7 @@ def dashboardPage(requests, username):
             character.save()
             new_num_quests = user.number_of_quests
             return JsonResponse({"message": "Task completed successfully from dashboard!", "newNumQuest": new_num_quests}, status=200)
-        elif message == 'Get quest details!':
+        elif message == 'Get quest details!':  # gets quest details from frontend
             data = json.loads(requests.body.decode('utf-8'))
             quests = data.get('quests')
             fetchedQuest = dailyQuest.objects.filter(quest_name__in=quests)
@@ -200,23 +208,35 @@ def finish_task_route(request, username):
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
         task_index = data.get('taskIndex')
-        task_complete = finish_task(task_index, username)
+
+        task_complete = finish_task(task_index, username)  # sends to function
+
+        # desturctue the task_complete
         NumberQuest = task_complete.get('NumberQuest')
         charExp = task_complete.get('charExp')
         drops = task_complete.get('drops')
-        named_drop = named_drops(drops)
         questName = data.get('questName')
+        messageB = data.get('messageBoard')
+        if messageB is None:
+            messageB = f'You completed "{questName}", congratulations!'
+        else:
+            pass
+        # process drops
+        named_drop = named_drops(drops)
+        # db query
         completedQuest = dailyQuest.objects.get(quest_name=questName)
-        questID = completedQuest.id
         user = CustomUser.objects.get(username=username)
+        # send out from queries
         completed = user.percent_weekly_completed
+        questID = completedQuest.id
 
         send_out = {"message": "Finish task!",
                     "NumberQuest": NumberQuest,
                     "drops": named_drop,
                     "completed": completed,
                     "charExp": charExp,
-                    "questID": questID
+                    "questID": questID,
+                    "messageBoard": messageB
                     }
         return JsonResponse(send_out, status=200)
 
