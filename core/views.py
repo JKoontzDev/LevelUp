@@ -22,6 +22,11 @@ def finish_task(index, username):
         if character.exp == 100:
             character.exp = 0
             character.level = character.level + 1
+            if character.can_advance_rank():
+                if character.advance_rank():
+                    messageBoard = "Nice Job! You ranked up!"
+            else:
+                pass
             messageBoard = "You've leveled up! This is proof that your hard work and perseverance are paying off. Keep pushing forward—greater challenges bring even greater rewards!"
             character.save()
             user.save()
@@ -204,6 +209,7 @@ def dashboardPage(requests, username):
                                                            "items": last_four_items, "character": character})
 
 
+@login_required
 def finish_task_route(request, username):
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
@@ -251,12 +257,14 @@ def mapPage(request, username):
     return render(request, "map.html")
 
 
+@login_required
 def marketView(request, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
     return render(request, "market.html", {'user': user, "character": character})
 
 
+@login_required
 def marketViewSendItems(request, username):
     items = Item.objects.filter(marketable=True)
     if request.method == "GET":

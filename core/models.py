@@ -111,6 +111,21 @@ class Character(models.Model):
 
         super().delete(*args, **kwargs)
 
+    def can_advance_rank(self):
+        next_rank = Rank.objects.filter(min_level__lte=self.level).exclude(pk=self.rank_id).order_by(
+            'min_level').first()
+        if next_rank and self.level >= next_rank.min_level:
+            return next_rank
+        return None
+
+    def advance_rank(self):
+        next_rank = self.can_advance_rank()
+        if next_rank:
+            self.rank = next_rank
+            self.save()
+            return True
+        return False
+
 
 class CustomUser(AbstractUser):
     number_of_quests = models.IntegerField(default=4)  # changes as you complete quests throughout the day.
