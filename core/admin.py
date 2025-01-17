@@ -3,6 +3,12 @@ from django.contrib.auth.admin import UserAdmin
 from .models import *
 
 
+
+class EquipablesIngredientsInline(admin.TabularInline):
+    model = equipablesIngredients
+    extra = 1  # Number of empty forms to display initially
+
+
 class CustomUserAdmin(UserAdmin):
     # Define the fields to display in the admin panel
     list_display = ('username', 'email', 'is_staff', 'is_active')  # Adjust fields as needed
@@ -81,18 +87,18 @@ class DailyQuestAdmin(admin.ModelAdmin):
 
 
 class itemsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'drop_class', 'price', 'type', 'damage', 'healing', 'drop_rate', 'marketable', 'market_drop_rate')
-    search_fields = ('name', 'type', 'marketable')
-    ordering = ('name', 'type', 'marketable')
+    list_display = ('name', 'description', 'drop_class', 'price', 'type', 'drop_rate', 'marketable', 'market_drop_rate', 'forgeIngredient')
+    search_fields = ('name', 'type', 'marketable', 'forgeIngredient')
+    ordering = ('name', 'type', 'marketable', 'forgeIngredient')
     fieldsets = (
-        ('item details', {'fields': ('name', 'description', 'drop_class', 'price', 'marketable', 'market_drop_rate')}),
-        ('stats', {'fields': ('type', 'damage', 'healing', 'drop_rate')}),
+        ('item details', {'fields': ('name', 'description', 'drop_class', 'price', 'marketable', 'market_drop_rate', 'forgeIngredient')}),
+        ('stats', {'fields': ('type', 'drop_rate')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': (
-            'name', 'description', 'drop_class', 'price', 'type', 'damage', 'healing', 'drop_rate', 'marketable', 'market_drop_rate'),
+            'name', 'description', 'drop_class', 'price', 'type', 'drop_rate', 'marketable', 'market_drop_rate', 'forgeIngredient'),
         }),
     )
 
@@ -113,8 +119,39 @@ class skillsAdmin(admin.ModelAdmin):
     )
 
 
+class armorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'defense', 'resistance', 'forgeable', 'repair_cost')
+    search_fields = ('name', 'crafting_ingredients', 'forgeable')
+    ordering = ('name',)
+    fieldsets = (
+        ('armor details', {'fields': ('name', 'description')}),
+        ('stats', {'fields': ('defense', 'resistance', 'forgeable', 'repair_cost')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'name', 'description', 'defense', 'resistance', 'crafting_ingredients', 'forgeable', 'repair_cost'),
+        }),
+    )
+    inlines = [EquipablesIngredientsInline]
 
-
+class weaponAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'damage', 'attack_speed', 'critical_rate', 'forgeable', 'repair_cost')
+    search_fields = ('name', 'crafting_ingredients', 'forgeable')
+    ordering = ('name',)
+    fieldsets = (
+        ('weapon details', {'fields': ('name', 'description')}),
+        ('stats', {'fields': ('damage', 'attack_speed', 'critical_rate', 'forgeable', 'repair_cost')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'name', 'description', 'damage', 'attack_speed', 'critical_rate', 'crafting_ingredients', 'forgeable', 'repair_cost'),
+        }),
+    )
+    inlines = [EquipablesIngredientsInline]
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Rank, RankAdmin)
@@ -122,6 +159,10 @@ admin.site.register(RankDetail, RankDetailsAdmin)
 admin.site.register(dailyQuest, DailyQuestAdmin)
 admin.site.register(Item, itemsAdmin)
 admin.site.register(Skill, skillsAdmin)
+admin.site.register(Armor, armorAdmin)
+admin.site.register(Weapon, weaponAdmin)
+
+
 
 
 
