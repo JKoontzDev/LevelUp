@@ -144,7 +144,7 @@ def addWeapon(itemName, character):
             return JsonResponse({'message': message}, status=200)
 
     for ingredient in ingredientsList:
-        queried_item = BackpackItem.objects.get(item=ingredient['id'])
+        queried_item = BackpackItem.objects.get(item=ingredient['id'], character_id=character.id)
         queried_item.quantity = queried_item.quantity - ingredient['quantity']
         queried_item.save()
     character.weapons.add(weaponToAdd)
@@ -165,7 +165,7 @@ def addArmor(itemName, character):
          }
         for ingredient in equipablesIngredients.objects.filter(armor=armorToAdd.id)
     ]
-    print(ingredientsList)
+    #print(ingredientsList)
     backpack_data = [
         {
             "id": item.item_id,
@@ -177,7 +177,7 @@ def addArmor(itemName, character):
     # print(backpack_data)
     all_items_good = True
     for ingredient in ingredientsList:
-        print(ingredient)
+        #print(ingredient)
         matching_item = next(
             (item for item in backpack_data if
              item["name"] == ingredient["name"] and item["quantity"] >= ingredient["quantity"]),
@@ -189,7 +189,7 @@ def addArmor(itemName, character):
             return JsonResponse({'message': message}, status=200)
 
     for ingredient in ingredientsList:
-        queried_item = BackpackItem.objects.get(item=ingredient['id'])
+        queried_item = BackpackItem.objects.get(item=ingredient['id'], character_id=character.id)
         queried_item.quantity = queried_item.quantity - ingredient['quantity']
         queried_item.save()
     character.armor.add(armorToAdd)
@@ -495,27 +495,27 @@ def blackSmithFetch(request, username):
                     ] if hasattr(item, 'crafting_ingredients') else None,
                     "weaponLevel": {
                         "current_level": (
-                            item.weaponbag_set.first().current_level
+                            item.weaponbag_set.filter(character_id=character.id).first().current_level
                             if item.weaponbag_set.exists() else None
                         ),
                     } if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
                     "armorLevel": {
                         "current_level": (
-                            item.armorbag_set.first().current_level
+                            item.armorbag_set.filter(character_id=character.id).first().current_level
                             if item.armorbag_set.exists() else None
                         ),
                     } if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
 
                     'updatedDam': {
                         "upgraded_damage": (
-                            item.weaponbag_set.first().upgraded_damage
+                            item.weaponbag_set.filter(character_id=character.id).first().upgraded_damage
                             if item.weaponbag_set.exists() else None
                         ),
                     } if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
 
                     'updatedDen': {
                         "upgraded_defense": (
-                            item.armorbag_set.first().upgraded_defense
+                            item.armorbag_set.filter(character_id=character.id).first().upgraded_defense
                             if item.armorbag_set.exists() else None
                         ),
                     } if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
@@ -532,7 +532,7 @@ def blackSmithFetch(request, username):
                 if hasattr(item.item, "forgeIngredient")
             ]
 
-            print(item_data)
+           # print(item_data)
 
             return JsonResponse({'message': "Repair", 'items': item_data, 'ingredients': ingredients}, status=200)
 
