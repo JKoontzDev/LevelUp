@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    BlackSmith
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/blackSmith.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+
+
+    <div class="blacksmith-container">
+        <div class="blacksmith-section">
+            <img src="{% static 'img/blacksmith.jpeg' %}" alt="Blacksmith" class="blacksmith-portrait">
+            <p class="blacksmith-greeting">"Looking to forge something strong or repair your gear? I can help!"</p>
+        </div>
+        <div class="blacksmith-actions">
+            <button class="action-btn" data-action="forge">Forge</button>
+            <button class="action-btn" data-action="repair">Repair</button>
+            <button class="action-btn" data-action="upgrade">Upgrade</button>
+            <button class="action-btn" data-action="smelt">Smelt</button>
+            <div class="action-div">Gold: {{ character.gold }}</div>
+
+        </div>
+        <div class="action-display">
+            <div id="ingredientList">
+                <div id="loading">Loading...</div>
+            </div>
+            <div id="upgradePanel" class="upgrade-panel"></div>
+
+            <div class="action-content" id="actionContent">
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="{% static 'js/blackSmith.js' %}"></script>
+
+
+
+{% endblock %}

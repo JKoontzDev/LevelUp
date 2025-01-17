@@ -1,0 +1,228 @@
+.blacksmith-container {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     width: 85vw;
+     padding: 20px;
+     border-radius: 10px;
+     margin-top: -5vh;
+}
+ .blacksmith-section {
+     text-align: center;
+     margin-bottom: 20px;
+}
+ .blacksmith-portrait {
+     width: 20vw;
+     height: 50vh;
+     border: 3px solid #fff;
+     border-radius: 5px;
+}
+ .blacksmith-actions {
+     display: flex;
+     gap: 15px;
+     margin-bottom: 20px;
+}
+ .action-btn {
+     background: #555;
+     color: #fff;
+     border: none;
+     padding: 10px 20px;
+     cursor: pointer;
+     border-radius: 5px;
+}
+ .action-btn:hover {
+     background: #777;
+}
+.action-div {
+     background: #555;
+     color: #fff;
+     border: none;
+     padding: 10px 20px;
+     cursor: auto;
+     border-radius: 5px;
+}
+.action-div:hover {
+     background: #777;
+}
+ .action-display {
+     width: 100%;
+}
+ .action-content {
+     padding: 20px;
+     border-radius: 5px;
+     text-align: center;
+     margin-bottom: 20px;
+     display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+
+}
+
+ .flexDiv{
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     flex-direction: column;
+ }
+
+.item {
+  background: linear-gradient(135deg, #333, #555);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  margin: 2vw;
+  width: 200px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Add hover effect to items */
+.item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Item icons */
+.item-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+  border-radius: 50%;
+  border: 2px solid #00F5FF;
+}
+
+/* Item name */
+.item-name {
+  color: #fff;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+/* Subtitle */
+.item-subtitle {
+  color: #bbb;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+/* Upgrade button */
+.DButton {
+  background-color: #00F5FF;
+  color: black;
+  border: 2px solid #00F5FF;
+  border-radius: 20px;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-weight: bold;
+  transition: transform 0.2s ease-in-out, box-shadow 0.3s ease;
+}
+
+/* Hover effect for buttons */
+.DButton:hover {
+  animation: glow 1s infinite alternate;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px #00F5FF, 0 0 20px #00F5FF;
+}
+
+/* Glow animation */
+@keyframes glow {
+  from {
+    opacity: 1;
+    box-shadow: 0 0 10px #00F5FF;
+  }
+  to {
+    opacity: 0.8;
+    box-shadow: 0 0 20px #00F5FF;
+  }
+}
+
+
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px #00F5FF, 0 0 10px #00F5FF, 0 0 5px #00F5FF;
+    }
+    100% {
+        box-shadow: 0 0 10px #00F5FF, 0 0 30px #00F5FF, 0 0 10px #00F5FF;
+    }
+}
+
+#loading {
+    display: none;
+}
+
+
+
+.upgrade-panel {
+  display: none;
+  width: 90%;
+  max-width: 40vw;
+  background: linear-gradient(135deg, #333, #555)
+  border: 2px solid #00f5ff;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  z-index: 1000;
+
+
+}
+
+.upgrade-panel h2 {
+  margin-bottom: 20px;
+}
+
+.upgrade-panel .stats, .upgrade-panel .ingredients {
+  margin-bottom: 20px;
+}
+
+.upgrade-panel .stats p {
+  margin: 5px 0;
+}
+
+.upgrade-panel .ingredients h3 {
+  margin-bottom: 10px;
+}
+
+.upgrade-panel .ingredients ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.upgrade-panel .ingredients ul li {
+  margin: 5px 0;
+  color: #cccccc;
+}
+
+.upgrade-panel button {
+  margin: 10px 5px 0;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.upgrade-panel .upgrade-button {
+  background-color: #00f5ff;
+  color: black;
+  transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+}
+
+.upgrade-panel .upgrade-button:disabled {
+  background-color: #555555;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+.upgrade-panel .upgrade-button:hover:not(:disabled) {
+  transform: scale(1.05);
+  background-color: #00d4d4;
+}
+
+.upgrade-panel button:last-child {
+  background-color: #ff5252;
+  color: white;
+}
+
+.upgrade-panel button:last-child:hover {
+  background-color: #ff0000;
+}

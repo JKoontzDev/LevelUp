@@ -138,15 +138,11 @@ function displayItems(category, items) {
 
 
             buyBut.addEventListener('click', function () {
-
                 const data = {
                     status: 'sent',
                     itemName: buyBut.id,
                     username: username,
                 };
-
-
-
                 fetch(url, {
                     method: 'Post',
                     headers: {
@@ -162,9 +158,8 @@ function displayItems(category, items) {
                     return response.json(); // Parse JSON response
                 })
                 .then(responseData => {
-                    console.log("BELLOW");
-
-                    console.log(responseData.message);
+                    //console.log("BELLOW");
+                    //console.log(responseData.message);
                     if (responseData.message == "Task completed successfully!") {
                         const itemNameToRemove = responseData.item
                         //console.log(itemNameToRemove)

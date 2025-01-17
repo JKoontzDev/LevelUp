@@ -34,8 +34,6 @@ class DropClass(models.TextChoices):
 
 class typeClass(models.TextChoices):
     INGREDIENT = 'ingredient', 'Ingredient'
-    WEAPON = 'weapon', 'Weapon'
-    ARMOR = 'armor', 'Armor'
     OBJECT = 'object', 'Object'
 
 
@@ -52,16 +50,58 @@ class Item(models.Model):
         choices=typeClass.choices,
         default=typeClass.INGREDIENT
     )
-    damage = models.IntegerField(null=True, blank=True)
-    healing = models.IntegerField(null=True, blank=True)
     drop_rate = models.IntegerField(default=0)
     price = models.IntegerField(default=0)
     marketable = models.BooleanField(default=False)
     market_drop_rate = models.FloatField(default=50.0)
-
+    forgeIngredient = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
+
+
+
+class equipablesIngredients(models.Model):
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    weapon = models.ForeignKey('Weapon', on_delete=models.CASCADE, null=True, blank=True)
+    armor = models.ForeignKey('Armor', on_delete=models.CASCADE, null=True, blank=True)
+
+
+    def __str__(self):
+        return f"{self.quantity} x {self.item.name} )"
+
+
+
+class Weapon(models.Model):
+    name = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    max_durability = models.IntegerField(default=10)
+    damage = models.IntegerField()
+    attack_speed = models.FloatField(default=1.0)
+    critical_rate = models.FloatField(default=0.0)
+    forgeable = models.BooleanField(default=False)
+    repair_cost = models.IntegerField(default=10)
+    crafting_ingredients = models.ManyToManyField(Item, related_name='used_for_weapon', through=equipablesIngredients, blank=True)
+
+    def __str__(self):
+        return f"Weapon: {self.name}"
+
+
+class Armor(models.Model):
+    name = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    max_durability = models.IntegerField(default=10)
+    defense = models.IntegerField()
+    resistance = models.IntegerField(null=True, blank=True)
+    forgeable = models.BooleanField(default=False)
+    repair_cost = models.IntegerField(default=10)
+    crafting_ingredients = models.ManyToManyField(Item, related_name='used_for_armor', through=equipablesIngredients, blank=True)
+
+
+    def __str__(self):
+        return f"Armor: {self.name}"
+
 
 
 
@@ -85,6 +125,29 @@ class BackpackItem(models.Model):
         return f"{self.quantity} x {self.item.name} (owned by {self.character.character_name})"
 
 
+
+class WeaponBag(models.Model):
+    character = models.ForeignKey('Character', on_delete=models.CASCADE, null=True, blank=True)
+    weapon = models.ForeignKey('Weapon', on_delete=models.CASCADE, null=True, blank=True)
+    current_durability = models.IntegerField(default=1)
+    current_level = models.IntegerField(default=1)
+    upgraded_damage = models.IntegerField(default=0)
+    def __str__(self):
+        return f"{self.current_durability} x {self.weapon.name} (owned by {self.character.character_name})"
+
+
+class ArmorBag(models.Model):
+    character = models.ForeignKey('Character', on_delete=models.CASCADE, null=True, blank=True)
+    armor = models.ForeignKey('Armor', on_delete=models.CASCADE, null=True, blank=True)
+    current_durability = models.IntegerField(default=1)
+    current_level = models.IntegerField(default=1)
+    upgraded_defense = models.IntegerField(default=0)
+    def __str__(self):
+        return f"{self.current_durability} x {self.armor.name} (owned by {self.character.character_name})"
+
+
+
+
 class Character(models.Model):
     character_name = models.CharField(max_length=50)
     skills = models.ManyToManyField(Skill, blank=True)
@@ -101,6 +164,20 @@ class Character(models.Model):
     exp = models.IntegerField(default=0)
     gold = models.IntegerField(default=0)
     quests = models.ManyToManyField('dailyQuest', related_name='characters')
+    armor = models.ManyToManyField(
+        Armor,
+        through='ArmorBag',
+        related_name='armor_bag',
+        blank=True
+    )
+    weapons = models.ManyToManyField(
+        Weapon,
+        through='WeaponBag',
+        related_name='weapon_bag',
+        blank=True
+    )
+
+
 
     def __str__(self):
         return self.character_name

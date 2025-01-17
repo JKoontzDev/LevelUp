@@ -12,5 +12,7 @@ urlpatterns = [
     path('dashboard/<str:username>/map/', views.mapPage, name='mapPage'),
     path('dashboard/<str:username>/market/', views.marketView, name='marketView'),
     path('dashboard/<str:username>/market/items', views.marketViewSendItems, name='getMarketItems'),
+    path('dashboard/<str:username>/blacksmith/', views.blackSmithView, name='blackSmithView'),
+    path('dashboard/<str:username>/blacksmith/items', views.blackSmithFetch, name='getBlacksmithItems'),
 
 ]

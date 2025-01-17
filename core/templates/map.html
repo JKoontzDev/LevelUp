@@ -6,7 +6,7 @@
     <div class="map">
         <a href="town.html" class="area town">Town</a>
         <a href="{% url 'marketView' username=user.username %}" class="area market">Market</a>
-        <a href="blacksmith.html" class="area blacksmith">Blacksmith</a>
+        <a href="{% url 'blackSmithView' username=user.username %}" class="area blacksmith">Blacksmith</a>
         <a href="training.html" class="area training">Training Grounds</a>
         <a href="dungeon.html" class="area dungeon">Dungeon</a>
     </div>

@@ -37,7 +37,7 @@ def finish_task(index, username):
     user.completed_quests = user.completed_quests + 1
     user.percent_weekly_completed = round((user.completed_quests / user.weekly_quests_count) * 100)
     if user.percent_weekly_completed >= 100.00:
-        #print("Week compelte")
+        # print("Week compelte")
         messageBoard = "You've conquered the week like a true hero—each day a step closer to your goals. Take pride in your progress and remember, every small victory fuels the next great adventure!"
         user.percent_weekly_completed = 0.00
         user.save()
@@ -59,7 +59,6 @@ def finish_task(index, username):
         if not created:
             backpack_item.quantity += 1
             backpack_item.save()
-
 
     if messageBoard == '':
         return {'NumberQuest': new_number_of_quests, 'drops': drops, 'charExp': charExp}
@@ -85,10 +84,14 @@ def named_drops(drop):
     return names
 
 
+
 def addItemToBag(itemToAdd, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
-    item = Item.objects.get(name=itemToAdd)
+    if isinstance(itemToAdd, int):
+        item = Item.objects.get(id=itemToAdd)
+    elif isinstance(itemToAdd, str):
+        item = Item.objects.get(name=itemToAdd)
     if item.marketable:
         itemPrice = item.price
         if character.gold >= itemPrice:
@@ -108,8 +111,95 @@ def addItemToBag(itemToAdd, username):
 
 
 
+def addWeapon(itemName, character):
+    weaponToAdd = Weapon.objects.get(name=itemName)
+    backpack = BackpackItem.objects.filter(character_id=character.id, item__forgeIngredient=True, )
+    # print(weaponToAdd)
+    ingredientsList = [
+        {"name": ingredient.item.name,
+         "quantity": ingredient.quantity,
+         "id": ingredient.item.id
+         }
+        for ingredient in equipablesIngredients.objects.filter(weapon=weaponToAdd.id)
+    ]
+    backpack_data = [
+        {
+            "id": item.item_id,
+            "name": item.item.name,
+            "quantity": item.quantity,
+        }
+        for item in backpack
+    ]
+    # print(backpack_data)
+    all_items_good = True
+    for ingredient in ingredientsList:
+        matching_item = next(
+            (item for item in backpack_data if
+             item["name"] == ingredient["name"] and item["quantity"] >= ingredient["quantity"]),
+            None
+        )
+        if not matching_item:
+            all_items_good = False
+            message = f"Missing or insufficient quantity for: {ingredient['name']}"
+            return JsonResponse({'message': message}, status=200)
 
-#routes
+    for ingredient in ingredientsList:
+        queried_item = BackpackItem.objects.get(item=ingredient['id'])
+        queried_item.quantity = queried_item.quantity - ingredient['quantity']
+        queried_item.save()
+    character.weapons.add(weaponToAdd)
+    weaponBag = WeaponBag.objects.filter(character=character.id, weapon=weaponToAdd.id).first()
+    weaponBag.current_durability = weaponToAdd.max_durability
+    weaponBag.save()
+    return JsonResponse({'message': 'Completed', 'ingredients': ingredientsList}, status=200)
+
+
+def addArmor(itemName, character):
+    armorToAdd = Armor.objects.get(name=itemName)
+    backpack = BackpackItem.objects.filter(character_id=character.id, item__forgeIngredient=True, )
+    # print(weaponToAdd)
+    ingredientsList = [
+        {"name": ingredient.item.name,
+         "quantity": ingredient.quantity,
+         "id": ingredient.item.id
+         }
+        for ingredient in equipablesIngredients.objects.filter(armor=armorToAdd.id)
+    ]
+    print(ingredientsList)
+    backpack_data = [
+        {
+            "id": item.item_id,
+            "name": item.item.name,
+            "quantity": item.quantity,
+        }
+        for item in backpack
+    ]
+    # print(backpack_data)
+    all_items_good = True
+    for ingredient in ingredientsList:
+        print(ingredient)
+        matching_item = next(
+            (item for item in backpack_data if
+             item["name"] == ingredient["name"] and item["quantity"] >= ingredient["quantity"]),
+            None
+        )
+        if not matching_item:
+            all_items_good = False
+            message = f"Missing or insufficient quantity for: {ingredient['name']}"
+            return JsonResponse({'message': message}, status=200)
+
+    for ingredient in ingredientsList:
+        queried_item = BackpackItem.objects.get(item=ingredient['id'])
+        queried_item.quantity = queried_item.quantity - ingredient['quantity']
+        queried_item.save()
+    character.armor.add(armorToAdd)
+    armorBag = ArmorBag.objects.filter(character=character.id, armor=armorToAdd.id).first()
+    armorBag.current_durability = armorToAdd.max_durability
+    armorBag.save()
+    return JsonResponse({'message': 'Completed', "ingredients": ingredientsList}, status=200)
+
+
+# routes
 
 def homePage(request):
     return render(request, template_name="home.html")
@@ -149,7 +239,7 @@ def loginPage(request):
     else:
         form = loginForm()
         RegForm = CustomUserCreationForm()
-    return render(request, "login.html", {'form': form, 'reg': RegForm,  'errors': RegForm.errors})
+    return render(request, "login.html", {'form': form, 'reg': RegForm, 'errors': RegForm.errors})
 
 
 @login_required
@@ -174,14 +264,15 @@ def dashboardPage(requests, username):
         if message == 'Finish task!':  # takes the looped Json from finished_task_route
             NumberQuests = data.get('NumberQuest')
             questID = data.get('questID')
-            #print(f"change_noq is {NumberQuests}")
+            # print(f"change_noq is {NumberQuests}")
             user.number_of_quests = NumberQuests
             quest_to_remove = character.quests.filter(id=questID)
             character.quests.remove(*quest_to_remove)
             user.save()
             character.save()
             new_num_quests = user.number_of_quests
-            return JsonResponse({"message": "Task completed successfully from dashboard!", "newNumQuest": new_num_quests}, status=200)
+            return JsonResponse(
+                {"message": "Task completed successfully from dashboard!", "newNumQuest": new_num_quests}, status=200)
         elif message == 'Get quest details!':  # gets quest details from frontend
             data = json.loads(requests.body.decode('utf-8'))
             quests = data.get('quests')
@@ -189,7 +280,9 @@ def dashboardPage(requests, username):
             questDescription = {}
             for i in fetchedQuest:
                 questDescription[i.quest_name] = i.quest_description
-            return JsonResponse({"message": "Task completed successfully from quest details!", 'questDescription': questDescription}, status=200)
+            return JsonResponse(
+                {"message": "Task completed successfully from quest details!", 'questDescription': questDescription},
+                status=200)
     if requests.method == "GET":
         if number_of_quests == 0:
             user.gotten_quests = False
@@ -249,7 +342,9 @@ def finish_task_route(request, username):
 
 @login_required
 def characterPage(request, username):
-    return render(request, "character.html")
+    user = CustomUser.objects.get(username=username)
+    character = user.character
+    return render(request, "character.html", {'character': character, 'user': user})
 
 
 @login_required
@@ -279,7 +374,7 @@ def marketViewSendItems(request, username):
                     'type': item.type
 
                 })
-        return JsonResponse(itemsToPage, status=200, safe=False,)
+        return JsonResponse(itemsToPage, status=200, safe=False, )
 
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
@@ -292,3 +387,276 @@ def marketViewSendItems(request, username):
         else:
             send_out = {"message": "Insufficient funds", "item": item}
             return JsonResponse(send_out, status=200)
+
+
+@login_required
+def blackSmithView(request, username):
+    user = CustomUser.objects.get(username=username)
+    character = user.character
+    return render(request, "blackSmith.html", {'user': user, "character": character})
+
+
+@login_required
+def blackSmithFetch(request, username):
+    if request.method == "GET":
+        message = request.headers.get('X-Custom-Message')
+        userName = request.headers.get('X-Custom-User')
+        user = CustomUser.objects.get(username=userName)
+        character = user.character
+        backpack = BackpackItem.objects.filter(
+            character_id=character.id,
+            item__forgeIngredient=True,
+        )
+        backpack_data = [
+            {
+                "id": item.item_id,
+                "name": item.item.name,
+                "quantity": item.quantity,
+            }
+            for item in backpack
+        ]
+
+        if message == "smelt":
+            filtered_backpack_data = [
+                item for item in backpack_data if "ore" in item["name"].lower()
+            ]
+            if not filtered_backpack_data:
+                return JsonResponse({'message': 'Completed'}, status=200)
+            else:
+                return JsonResponse({'message': 'Completed', 'backpack': filtered_backpack_data}, status=200)
+        elif message == "forge":
+            forgeables = []
+            weapons = Weapon.objects.filter(forgeable=True)
+            armors = Armor.objects.filter(forgeable=True)
+            for item in list(weapons) + list(armors):
+                item_type = 'weapon' if isinstance(item, Weapon) else 'armor'
+                forgeables.append({
+                    "name": item.name,
+                    "id": item.id,
+                    "type": item_type,
+                    "ingredients": [
+                        {"name": ingredient.item.name, "quantity": ingredient.quantity}
+                        for ingredient in equipablesIngredients.objects.filter(
+                            **{item_type: item}
+                        )
+                    ]
+                })
+
+            items = [
+                {"id": item.item_id,
+                 "name": item.item.name,
+                 "quantity": item.quantity}
+                for item in backpack
+                if hasattr(item.item, "forgeIngredient")
+            ]
+            if not items:
+                return JsonResponse({'message': 'Forge', "forgeables": forgeables}, status=200)
+            else:
+                return JsonResponse({'message': 'Forge', "items": items, "forgeables": forgeables}, status=200)
+        elif message == "repair":
+            items = list(character.weapons.all()) + list(character.armor.all())
+
+            item_data = []
+
+            for item in items:
+                if isinstance(item, Weapon):
+                    Cquantity = WeaponBag.objects.filter(character=character.id, weapon=item.id).first()
+                    current_durability = Cquantity.current_durability
+                    item_type = "weapon"
+                elif isinstance(item, Armor):
+                    Cquantity = ArmorBag.objects.filter(character=character.id, armor=item.id).first()
+                    current_durability = Cquantity.current_durability
+                    item_type = "armor"
+
+                item_data.append({
+                    "id": item.id,
+                    "name": item.name,
+                    "type": item_type,
+                    "repair_cost": item.repair_cost,
+                    "max_durability": item.max_durability,
+                    "current_durability": current_durability,
+                })
+
+
+
+            return JsonResponse({'message': "Repair", 'items': item_data}, status=200)
+        elif message == "upgrade":
+            items = list(character.weapons.all()) + list(character.armor.all())
+            item_data = [
+                {
+                    "id": item.id,
+                    "name": item.name,
+                    "damage": item.damage if hasattr(item, 'damage') else None,
+                    "defense": item.defense if hasattr(item, 'defense') else None,
+                    "upgradedDefense": item.defense + 2 if hasattr(item, 'defense') else None,
+                    "ingredients": [
+                        {"name": ingredient.item.name, "quantity": ingredient.quantity}
+                        for ingredient in item.equipablesingredients_set.all()
+                    ] if hasattr(item, 'crafting_ingredients') else None,
+                    "weaponLevel": {
+                        "current_level": (
+                            item.weaponbag_set.first().current_level
+                            if item.weaponbag_set.exists() else None
+                        ),
+                    } if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
+                    "armorLevel": {
+                        "current_level": (
+                            item.armorbag_set.first().current_level
+                            if item.armorbag_set.exists() else None
+                        ),
+                    } if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
+
+                    'updatedDam': {
+                        "upgraded_damage": (
+                            item.weaponbag_set.first().upgraded_damage
+                            if item.weaponbag_set.exists() else None
+                        ),
+                    } if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
+
+                    'updatedDen': {
+                        "upgraded_defense": (
+                            item.armorbag_set.first().upgraded_defense
+                            if item.armorbag_set.exists() else None
+                        ),
+                    } if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
+
+                    "upgradedDamage": item.damage + 2 if hasattr(item, 'damage') else None,
+                }
+                for item in items
+            ]
+            ingredients = [
+                {"id": item.item_id,
+                 "name": item.item.name,
+                 "quantity": item.quantity}
+                for item in backpack
+                if hasattr(item.item, "forgeIngredient")
+            ]
+
+            print(item_data)
+
+            return JsonResponse({'message': "Repair", 'items': item_data, 'ingredients': ingredients}, status=200)
+
+    elif request.method == "POST":
+        message = request.headers.get('X-Custom-Message')
+        userName = request.headers.get('X-Custom-User')
+        user = CustomUser.objects.get(username=userName)
+        character = user.character
+        if message == "smelt":
+            data = json.loads(request.body.decode('utf-8'))
+            item = data.get('OreId')
+            itemName = data.get('OreName')
+            Ingot = itemName.replace("Ore", "Ingot")
+            Ore = BackpackItem.objects.filter(item_id=item).first()
+            if Ore:
+                Ore.quantity = Ore.quantity - 2
+                Ore.save()
+                addItemToBag(Ingot, userName)
+                return JsonResponse({'message': 'Completed'}, status=200)
+
+        elif message == "forge":
+            data = json.loads(request.body.decode('utf-8'))
+            #item = data.get('itemId')
+            itemName = data.get('itemName')
+            weapon_exists = Weapon.objects.filter(name=itemName).exists()
+            armor_exists = Armor.objects.filter(name=itemName).exists()
+
+            if weapon_exists:
+                result = addWeapon(itemName, character)
+                print(result)
+                return result
+
+            elif armor_exists:
+                result = addArmor(itemName, character)
+                print(result)
+                return result
+
+        elif message == "repair":
+            data = json.loads(request.body.decode('utf-8'))
+            itemName = data.get('name')
+            itemType = data.get('type')
+            itemCost = data.get('repair_cost')
+            itemId = data.get('itemId')
+            if itemType == 'weapon':
+                weapon = character.weapons.get(name=itemName)
+                weaponBag = WeaponBag.objects.filter(character=character.id, weapon=itemId).first()
+
+                weaponBag.current_durability = weapon.max_durability
+                if character.gold - itemCost < 0:
+                    return JsonResponse({"message": "Insufficient funds"}, status=200)
+                else:
+                    character.gold = character.gold - itemCost
+                    weaponBag.save()
+                    character.save()
+                    sendData = {
+                        "newDur": weaponBag.current_durability,
+                        "maxDur": weapon.max_durability
+
+                    }
+
+                    return JsonResponse({"message": "item repaired", "data": sendData}, status=200)
+            elif itemType == 'armor':
+                armor = character.armor.get(name=itemName)
+                armorBag = ArmorBag.objects.filter(character=character.id, armor=itemId).first()
+
+                armorBag.current_durability = armor.max_durability
+                if character.gold - itemCost < 0:
+                    return JsonResponse({"message": "Insufficient funds"}, status=200)
+                else:
+                    character.gold = character.gold - itemCost
+                    armorBag.save()
+                    character.save()
+                    sendData = {
+                        "newDur": armorBag.current_durability,
+                        "maxDur": armor.max_durability
+
+                    }
+                    return JsonResponse({"message": "item repaired", "data": sendData}, status=200)
+
+        elif message == "upgrade":
+            data = json.loads(request.body.decode('utf-8'))
+            itemName = data.get('item')
+            id = data.get('itemId')
+            heldIngredients = BackpackItem.objects.filter(character_id=character.id)
+            if Weapon.objects.filter(name=itemName).first():
+                weapon = character.weapons.get(name=itemName)
+                weaponBag = WeaponBag.objects.filter(character=character.id, weapon=weapon.id).first()
+                #print(heldIngredients)
+                ingredients = equipablesIngredients.objects.filter(weapon_id=weapon.id)
+                for ingredient in ingredients:
+                    item = BackpackItem.objects.get(item_id=ingredient.item_id, character_id=character.id)
+                    #print(item)
+                    if item:
+                        if item.quantity - ingredient.quantity < 0:
+                            return JsonResponse({'message': f"Missing or insufficient quantity for {item.item.name}"})
+                        else:
+                            item.quantity = item.quantity - ingredient.quantity
+                            item.save()
+
+                weaponBag.current_level = weaponBag.current_level + 1
+                if weaponBag.upgraded_damage == 0:
+                    weaponBag.upgraded_damage = weapon.damage
+                else:
+                    weaponBag.upgraded_damage = weaponBag.upgraded_damage + 2
+                weaponBag.save()
+                return JsonResponse({'message': "Weapon upgraded"}, status=200)
+            elif Armor.objects.filter(name=itemName).first():
+                armor = character.armor.get(name=itemName)
+                armorBag = ArmorBag.objects.filter(character=character.id, armor=armor.id).first()
+                # print(heldIngredients)
+                ingredients = equipablesIngredients.objects.filter(armor_id=armor.id)
+                for ingredient in ingredients:
+                    item = BackpackItem.objects.get(item_id=ingredient.item_id, character_id=character.id)
+                    if item:
+                        if item.quantity - ingredient.quantity < 0:
+                            return JsonResponse({'message': f"Missing or insufficient quantity for {item.item.name}"})
+                        else:
+                            item.quantity = item.quantity - ingredient.quantity
+                            item.save()
+                armorBag.current_level = armorBag.current_level + 1
+                if armorBag.upgraded_defense == 0:
+                    armorBag.upgraded_defense = armor.defense
+                else:
+                    armorBag.upgraded_defense = armorBag.upgraded_defense + 2
+                armorBag.save()
+                return JsonResponse({'message': "Armor upgraded"}, status=200)
+
