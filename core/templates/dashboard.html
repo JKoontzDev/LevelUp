@@ -50,8 +50,12 @@
 
     <section class="health-tracker">
         <h3>Health & Motivation</h3>
-        <p>HP: [||||||---]</p>
-        <p>Motivation: [|||||----]</p>
+        <p>HP: {{ character.current_health }}/{{ character.health }}</p>
+        <div class="health-bar"><div id="fillHealth" style="width: {{ calcHealth }}%;"></div></div>
+
+        <p>Motivation: {{ character.current_motivation }}/{{ character.motivation }}</p>
+        <div class="motivation-bar"><div id="fillMotivation" style="width: {{ calcMotivation }}%"></div></div>
+
     </section>
 
     <section class="quests-panel">
