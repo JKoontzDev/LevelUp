@@ -286,20 +286,38 @@ def dashboardPage(requests, username):
     if requests.method == "GET":
         if number_of_quests == 0:
             user.gotten_quests = False
-            return render(requests, "dashboard.html", {'user': user, "items": last_four_items, "character": character})
+            if character.current_motivation > 0:
+                calcMotivation = (character.current_motivation / character.motivation * 100)
+            if character.current_health > 0:
+                calcHealth = (character.current_health / character.health * 100)
+            return render(requests, "dashboard.html", {'user': user, "items": last_four_items, "character": character,
+                                                       "calcMotivation": calcMotivation, "calcHealth": calcHealth})
         else:
             if user.gotten_quests:
                 dquest = character.quests.all()
+                print(character.current_motivation)
+                if character.current_motivation > 0:
+                    calcMotivation = (character.motivation / character.current_motivation)
+                if character.current_health > 0:
+                    calcHealth = (character.health / character.current_health)
+                    print(calcHealth)
+
                 return render(requests, "dashboard.html",
                               {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests, "items": last_four_items,
-                               "character": character})
+                               "character": character, "calcMotivation": calcMotivation, "calcHealth": calcHealth})
             else:
                 character.quests.clear()
                 user.gotten_quests = True
                 user.save()
                 dquest = get_random_quests(number_of_quests, username)
+                if character.current_motivation > 0:
+                    calcMotivation = (character.motivation / character.current_motivation)
+                if character.current_health > 0:
+                    calcHealth = (character.health / character.current_health)
+                    print(calcHealth)
                 return render(requests, "dashboard.html", {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests,
-                                                           "items": last_four_items, "character": character})
+                                                           "items": last_four_items, "character": character,"calcMotivation": calcMotivation,
+                                                           "calcHealth": calcHealth})
 
 
 @login_required
@@ -348,8 +366,8 @@ def characterPage(request, username):
 
 
 @login_required
-def mapPage(request, username):
-    return render(request, "map.html")
+def worldMapPage(request, username):
+    return render(request, "worldMap.html")
 
 
 @login_required
@@ -660,3 +678,11 @@ def blackSmithFetch(request, username):
                 armorBag.save()
                 return JsonResponse({'message': "Armor upgraded"}, status=200)
 
+
+@login_required
+def healthMotivation(request, username):
+    return JsonResponse({'message': "Hi"})
+
+
+def ironsteadPage(request, username):
+    return render(request, "ironstead.html")

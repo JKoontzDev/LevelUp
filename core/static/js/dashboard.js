@@ -14,6 +14,8 @@ const messageBoard = document.getElementById('messages');
 const questDetails = document.querySelectorAll('.questDetails');
 const mainArea = document.querySelector('.main-content');
 const progressOverview = document.querySelector('.progress-overview');
+const motivationBar = document.getElementById('fillMotivation');
+const healthBar = document.getElementById('fillHealth');
 
 
 let num = 0;
@@ -119,8 +121,6 @@ daily_task_check.forEach((checkbox, index) => {
 });
 
 
-
-
 // Bellow is used to get the quest details and display them in a <section>
 const dataForQDetails = {
         message: 'Get quest details!',
@@ -148,7 +148,6 @@ fetch(`/dashboard/${username}/`, {
     })
     .then(data => {
         //console.log(data);
-
         questDetails.forEach((questDetails) => {
             questDetails.addEventListener('click', function() {
                 const questName = questDetails.textContent.trim();
@@ -161,8 +160,6 @@ fetch(`/dashboard/${username}/`, {
                         questDescription = Questjson[key];
                     }
                 });
-
-
 
                 const questDetailsAdded = document.getElementById('questDetailSec');
                 if (questDetailsAdded) {
@@ -188,8 +185,6 @@ fetch(`/dashboard/${username}/`, {
                     Delete.addEventListener('click', function() {
                         sectionElement.remove();
                     })
-
-
                     mainArea.insertBefore(sectionElement, progressOverview);
                 }
 
@@ -197,8 +192,6 @@ fetch(`/dashboard/${username}/`, {
         })
 
     })
-
-
 // above is used to get the quest details and display them in a <section>
 
 // below is the message board function
@@ -208,4 +201,4 @@ function toMessageBoard(message) {
 
 }
 
-
+// bellow is used for health and motivation
