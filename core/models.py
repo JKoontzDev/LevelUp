@@ -176,8 +176,10 @@ class Character(models.Model):
         related_name='weapon_bag',
         blank=True
     )
-
-
+    health = models.IntegerField(default=10)
+    current_health = models.IntegerField(default=10)
+    motivation = models.IntegerField(default=4)
+    current_motivation = models.IntegerField(default=2)
 
     def __str__(self):
         return self.character_name
