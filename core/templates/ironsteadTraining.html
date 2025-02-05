@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Ironstead Training Grounds
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/ironsteadTraining.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+    <meta name="level" content="{{ character.level }}">
+    <meta name="motivation" content="{{ character.current_motivation }}">
+
+
+    <div class="traingGrounds">
+        <div class="character-stats">
+            <h2>{{character.character_name}}s Stats</h2>
+            <div class="item-display">
+                <div class="stat-item">
+                    <h5>{{ character.character_name }}s Health</h5>
+                    <p id="healthText">{{ character.current_health }}/{{ character.health }}</p>
+                </div>
+                <div class="stat-item">
+                    <h5>{{ character.character_name }}s Motivation</h5>
+                    <p id="motText">{{ character.current_motivation }}/{{ character.motivation }}</p>
+                </div>
+
+                <div class="stat-item">
+                    <h5>{{ character.character_name }}s Weapon Efficiency</h5>
+                    <select id="weapon-select">
+                      <option value="">Select a Weapon</option>
+                      {% if weapon %}
+                        <option value="{{ weapon.weapon_id }}">{{ weapon.weapon_name }}</option>
+                      {% else %}
+                        <option value="">No weapons available</option>
+                      {% endif %}
+                    </select>
+                    <button data-action="stat-details" id="details-button" class="detail-button">Details</button>
+                </div>
+                <div class="stat-item">
+                    <h5>{{ character.character_name }}s Magic Efficiency</h5>
+                    <select id="magic-select">
+                      <option value="">Select a magic spell</option>
+                      {% if magic %}
+                        {% for i in magic %}
+                        <option value="{{ i.name }}">{{ i.name }}</option>
+                        {% endfor %}
+                      {% else %}
+                        <option value="">No magic available</option>
+                      {% endif %}
+                    </select>
+                    <button data-action="stat-details" id="details-button-magic" class="detail-button">Details</button>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="character-avatar">
+            <p>CHARACTER IMG</p>
+            <div class="messageDiv">
+                <p id="characterMessage"></p>
+            </div>
+        </div>
+
+        <div class="character-skills">
+            <h2 class="right">{{character.character_name}}s Skills</h2>
+            <div class="item-display">
+                {% for skill in skills %}
+                <div class="stat-item">
+                    <h5 class="skill-header">{{ skill.name }}</h5>
+                    <p class="skill-type">Skill type: {{ skill.skill_type }}</p>
+                    <button data-action="{{skill.name}}" class="detail-button">Details</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div id="detailsSection" class="detailsSection">
+
+
+    </div>
+
+
+
+    <script src="{% static 'js/ironsteadTraining.js' %}"></script>
+
+
+
+{% endblock %}

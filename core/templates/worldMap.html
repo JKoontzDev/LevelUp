@@ -4,10 +4,7 @@
     <link rel="stylesheet" href="{% static 'css/worldMap.css' %}">
 
     <div class="map">
-        <a href="town.html" class="area training">Training</a>
-        <a href="{% url 'marketView' username=user.username %}" class="area market">Market</a>
-        <a href="{% url 'blackSmithView' username=user.username %}" class="area blacksmith">Blacksmith</a>
-        <a href="training.html" class="area town">Ironstead</a>
+        <a href="{% url 'ironsteadPage' username=user.username %}" class="area ironstead">Ironstead</a>
         <a href="dungeon.html" class="area dungeon">Dungeon</a>
     </div>
 

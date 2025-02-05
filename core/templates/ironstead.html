@@ -1,0 +1,12 @@
+
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'css/ironstead.css' %}">
+
+    <div class="map">
+        <a href="{% url 'marketView' username=user.username %}" class="area market">Market</a>
+        <a href="{% url 'blackSmithView' username=user.username %}" class="area blacksmith">Blacksmith</a>
+        <a href="{% url 'worldMapPage' username=user.username %}" class="area town">Leave Town</a>
+        <a href="{% url 'trainingView' username=user.username %}" class="area training">Training</a>
+
+    </div>

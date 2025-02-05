@@ -43,9 +43,10 @@
   border-radius: 10px;
   text-align: center;
   margin: 2vw;
-  width: 200px;
+  width: 10vw;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  gap: 2vw;
 }
 
 .item:hover {
@@ -90,7 +91,6 @@
   box-shadow: 0 0 10px #00F5FF, 0 0 20px #00F5FF;
 }
 
-/* Glow animation */
 @keyframes glow {
   from {
     opacity: 1;
