@@ -105,7 +105,7 @@ const buttons = document.querySelectorAll('.action-btn');
 const blackSmithText = document.querySelector('.blacksmith-greeting');
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const username = document.querySelector('meta[name="username"]').content;
-const url = '/dashboard/${username}/blacksmith/items';
+const url = '/dashboard/${username}/ironstead/blacksmith/items';
 const itemGrid = document.getElementById('actionContent');
 const loading = document.getElementById('loading');
 const upgradePanelDiv = document.getElementById("upgradePanel");

@@ -1,4 +1,4 @@
-const url = '/dashboard/${username}/market/items';
+const url = '/dashboard/${username}/ironstead/market/items';
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const username = document.querySelector('meta[name="username"]').content;
 const storedItems = localStorage.getItem('items');

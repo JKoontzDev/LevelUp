@@ -1,0 +1,63 @@
+body {
+     margin: 0;
+     padding: 0;
+     background: black;
+     color: white;
+     font-family: 'Arial', sans-serif;
+     text-align: center;
+     overflow: hidden;
+}
+ .container {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+}
+ h1 {
+     font-size: 4rem;
+     color: red;
+     text-shadow: 0 0 10px red;
+     animation: glitch 1.5s infinite alternate;
+}
+ @keyframes glitch {
+     0% {
+         text-shadow: 2px 2px 10px red;
+    }
+     50% {
+         text-shadow: -2px -2px 10px darkred;
+    }
+     100% {
+         text-shadow: 2px 2px 10px red;
+    }
+}
+ .message {
+     font-size: 1.5rem;
+     opacity: 0.8;
+}
+ .fade-out {
+     animation: fade 3s ease-in-out infinite alternate;
+}
+ @keyframes fade {
+     0% {
+         opacity: 1;
+    }
+     100% {
+         opacity: 0.3;
+    }
+}
+ .button {
+     display: inline-block;
+     margin-top: 20px;
+     padding: 15px 30px;
+     font-size: 1.2rem;
+     color: black;
+     background: red;
+     border: none;
+     cursor: pointer;
+     box-shadow: 0 0 10px red;
+     transition: 0.3s;
+}
+ .button:hover {
+     background: darkred;
+     box-shadow: 0 0 15px darkred;
+}

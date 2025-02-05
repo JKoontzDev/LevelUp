@@ -1,0 +1,45 @@
+body{
+     background-color: black;
+     margin: 0;
+     padding: 0;
+     overflow-x: hidden;
+     overflow-y: hidden;
+}
+ .map {
+     position: relative;
+     width: 100%;
+     height: 100%;
+     background: url('/static/img/ironstead.png') no-repeat center center;
+     background-size: cover;
+}
+ .area {
+     position: absolute;
+     text-decoration: underline;
+     background: rgba(0, 0, 0, 0.5);
+
+     color: rgb(255, 253, 208);
+     font-size: 1.5rem;
+     font-weight: bold;
+     padding: 20px;
+     border-radius: 10px;
+}
+.blacksmith {
+     top: 69%;
+     left: 50%;
+}
+ .market {
+     top: 40%;
+     left: 32%;
+}
+ .town{
+    top: 14%;
+    left: 1%;
+ }
+ .training {
+     top: 70%;
+     left: 16%;
+}
+
+ .area:hover {
+     background: rgba(0, 0, 0, 0.7);
+}

@@ -103,18 +103,18 @@ class itemsAdmin(admin.ModelAdmin):
     )
 
 class skillsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'level_required', 'damage', 'healing')
-    search_fields = ('name', 'level_required')
+    list_display = ('name', 'description', 'level_required', 'skill_type', 'damage', 'healing', 'max_damage', 'max_healing')
+    search_fields = ('name', 'level_required', 'skill_type')
     ordering = ('name', 'level_required')
     fieldsets = (
         ('item details', {'fields': ('name', 'description')}),
-        ('stats', {'fields': ('level_required', 'damage', 'healing')}),
+        ('stats', {'fields': ('level_required', 'skill_type', 'damage', 'healing', 'max_damage', 'max_healing')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': (
-                'name', 'description', 'level_required', 'damage', 'healing'),
+                'name', 'description', 'level_required', 'skill_type', 'damage', 'healing', 'max_damage', 'max_healing'),
         }),
     )
 
@@ -136,6 +136,7 @@ class armorAdmin(admin.ModelAdmin):
     )
     inlines = [EquipablesIngredientsInline]
 
+
 class weaponAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'damage', 'attack_speed', 'critical_rate', 'forgeable', 'repair_cost')
     search_fields = ('name', 'crafting_ingredients', 'forgeable')
@@ -153,6 +154,24 @@ class weaponAdmin(admin.ModelAdmin):
     )
     inlines = [EquipablesIngredientsInline]
 
+
+class magicAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'damage', 'healing', 'special', 'level')
+    search_fields = ('name', 'level')
+    ordering = ('name', )
+    fieldsets = (
+        ('magic details', {'fields': ('name', 'description', 'level')}),
+        ('stats', {'fields': ('damage', 'healing', 'special')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'name', 'description', 'level', 'damage', 'healing', 'special'),
+        }),
+    )
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Rank, RankAdmin)
 admin.site.register(RankDetail, RankDetailsAdmin)
@@ -161,6 +180,7 @@ admin.site.register(Item, itemsAdmin)
 admin.site.register(Skill, skillsAdmin)
 admin.site.register(Armor, armorAdmin)
 admin.site.register(Weapon, weaponAdmin)
+admin.site.register(Magic, magicAdmin)
 
 
 

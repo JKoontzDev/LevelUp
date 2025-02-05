@@ -1,10 +1,14 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
+
 from .forms import *
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.serializers import serialize
+
 from core.models import *
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 import json
 import random
 from datetime import datetime
@@ -84,7 +88,6 @@ def named_drops(drop):
     return names
 
 
-
 def addItemToBag(itemToAdd, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
@@ -109,6 +112,24 @@ def addItemToBag(itemToAdd, username):
         backpack_item.save()
     return 1
 
+
+def check_efficiency(efficiency, weapon_bag):
+    if 4.0 <= efficiency < 5.0:
+        weapon_bag.upgraded_damage = weapon_bag.upgraded_damage + 1
+    elif efficiency == 10.0:
+        weapon_bag.upgraded_damage = weapon_bag.upgraded_damage + 2
+    weapon_bag.save()
+
+
+def check_Magic_Efficiency(efficiency, magicTome, magic):
+    if 4.0 <= efficiency < 5.0:
+        if magic.damage != 0:
+            magicTome.damage_modifier = magicTome.damage_modifier + 1
+        elif magic.healing != 0:
+            magicTome.healing_modifier = magicTome.healing_modifier + 1
+    elif efficiency == 10.0:
+        magicTome.upgraded_damage = magicTome.upgraded_damage + 2
+    magicTome.save()
 
 
 def addWeapon(itemName, character):
@@ -165,7 +186,7 @@ def addArmor(itemName, character):
          }
         for ingredient in equipablesIngredients.objects.filter(armor=armorToAdd.id)
     ]
-    #print(ingredientsList)
+    # print(ingredientsList)
     backpack_data = [
         {
             "id": item.item_id,
@@ -177,7 +198,7 @@ def addArmor(itemName, character):
     # print(backpack_data)
     all_items_good = True
     for ingredient in ingredientsList:
-        #print(ingredient)
+        # print(ingredient)
         matching_item = next(
             (item for item in backpack_data if
              item["name"] == ingredient["name"] and item["quantity"] >= ingredient["quantity"]),
@@ -197,6 +218,136 @@ def addArmor(itemName, character):
     armorBag.current_durability = armorToAdd.max_durability
     armorBag.save()
     return JsonResponse({'message': 'Completed', "ingredients": ingredientsList}, status=200)
+
+
+def addSkill(skill, character):
+    skillset = skillSet.objects.filter(character_id=character.id, skill_id=skill.id).first()
+    if skillset:
+        if skillset.efficiency < 10:
+            skillset.efficiency = skillset.efficiency + 1
+            if skill.damage != 0:
+                skillset.damage_modifier = skillset.damage_modifier + 1
+            elif skill.healing != 0:
+                skillset.healing_modifier = skillset.healing_modifier + 1
+            skillset.save()
+            return {"message": "LevelUp", "damage": skillset.damage_modifier, "efficiency": skillset.efficiency}
+        else:
+            return "Max Efficiency"
+    else:
+        character.skills.add(skill)
+        character.save()
+        skillset = skillSet.objects.get(character_id=character.id, skill_id=skill.id)
+        if skill.damage != 0:
+            skillset.damage_modifier = skill.damage
+        elif skill.healing != 0:
+            skillset.healing_modifier = skill.healing
+        skillset.efficiency = skillset.efficiency + 1
+        skillset.save()
+        return {"message": "LevelUp", "efficiency": skillset.efficiency}
+
+
+def practiceWeapon(weapon, weapon_bag, character, type):
+    if type == 'safe':
+        if weapon_bag.weapon_efficiency <= 5:
+            num = random.randint(1, 100)
+            if num >= 50:
+                character.current_motivation = character.current_motivation - 1
+                character.current_health = character.current_health - 1
+                weapon_bag.weapon_efficiency = weapon_bag.weapon_efficiency + 0.25
+                check_efficiency(weapon_bag.weapon_efficiency, weapon_bag)
+                character.save()
+                weapon_bag.save()
+                return 1  # Damage
+            else:
+                character.current_motivation = character.current_motivation - 1
+                weapon_bag.weapon_efficiency = weapon_bag.weapon_efficiency + 0.50
+                check_efficiency(weapon_bag.weapon_efficiency, weapon_bag)
+                character.save()
+                weapon_bag.save()
+                return 2  # good
+
+        else:
+            weapon_bag.weapon_efficiency = weapon_bag.weapon_efficiency + 0.50
+            character.current_motivation = character.current_motivation - 1
+            check_efficiency(weapon_bag.weapon_efficiency, weapon_bag)
+            character.save()
+            weapon_bag.save()
+            return 2  # good
+    elif type == 'intense':
+        if weapon_bag.weapon_efficiency <= 5:
+            num = random.randint(1, 100)
+            if num >= 30:
+                character.current_motivation = character.current_motivation - 1
+                character.current_health = character.current_health - 2
+                character.save()
+                weapon_bag.save()
+                return 1  # Damage
+            else:
+                character.current_motivation = character.current_motivation - 1
+                weapon_bag.weapon_efficiency = weapon_bag.weapon_efficiency + 1
+                check_efficiency(weapon_bag.weapon_efficiency, weapon_bag)
+                character.save()
+                weapon_bag.save()
+                return 3  # amazing
+        else:
+            weapon_bag.weapon_efficiency = weapon_bag.weapon_efficiency + 1
+            character.current_motivation = character.current_motivation - 1
+            check_efficiency(weapon_bag.weapon_efficiency, weapon_bag)
+
+            character.save()
+            weapon_bag.save()
+            return 3  # amazing
+
+
+def practiceMagic(magic, magic_tome, character, type):
+    if type == 'safe':
+        if magic_tome.spell_efficiency <= 5:
+            num = random.randint(1, 100)
+            if num >= 50:
+                character.current_motivation = character.current_motivation - 1
+                character.current_health = character.current_health - 1
+                magic_tome.spell_efficiency = magic_tome.spell_efficiency + 0.25
+                check_Magic_Efficiency(magic_tome.spell_efficiency, magic_tome, magic)
+                character.save()
+                magic_tome.save()
+                return 1  # Damage
+            else:
+                character.current_motivation = character.current_motivation - 1
+                magic_tome.spell_efficiency = magic_tome.spell_efficiency + 0.50
+                check_Magic_Efficiency(magic_tome.spell_efficiency, magic_tome, magic)
+                character.save()
+                magic_tome.save()
+                return 2  # good
+
+        else:
+            magic_tome.spell_efficiency = magic_tome.spell_efficiency + 0.50
+            character.current_motivation = character.current_motivation - 1
+            check_Magic_Efficiency(magic_tome.spell_efficiency, magic_tome, magic)
+            character.save()
+            magic_tome.save()
+            return 2  # good
+    elif type == 'intense':
+        if magic_tome.spell_efficiency <= 5:
+            num = random.randint(1, 100)
+            if num >= 30:
+                character.current_motivation = character.current_motivation - 1
+                character.current_health = character.current_health - 2
+                character.save()
+                return 1  # Damage
+            else:
+                character.current_motivation = character.current_motivation - 1
+                magic_tome.spell_efficiency = magic_tome.spell_efficiency + 1
+                check_Magic_Efficiency(magic_tome.spell_efficiency, magic_tome, magic)
+                character.save()
+                magic_tome.save()
+                return 3  # amazing
+        else:
+            magic_tome.spell_efficiency = magic_tome.spell_efficiency + 1
+            character.current_motivation = character.current_motivation - 1
+            check_Magic_Efficiency(magic_tome.spell_efficiency, magic_tome, magic)
+            character.save()
+            magic_tome.save()
+            return 3  # amazing
 
 
 # routes
@@ -295,13 +446,16 @@ def dashboardPage(requests, username):
         else:
             if user.gotten_quests:
                 dquest = character.quests.all()
-                print(character.current_motivation)
+                # print(character.current_motivation)
                 if character.current_motivation > 0:
-                    calcMotivation = (character.motivation / character.current_motivation)
+                    calcMotivation = (character.current_motivation / character.motivation * 100)
+                else:
+                    calcMotivation = 0
                 if character.current_health > 0:
-                    calcHealth = (character.health / character.current_health)
-                    print(calcHealth)
-
+                    calcHealth = (character.current_health / character.health * 100)
+                    # print(calcHealth)
+                else:
+                    calcHealth = 0
                 return render(requests, "dashboard.html",
                               {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests, "items": last_four_items,
                                "character": character, "calcMotivation": calcMotivation, "calcHealth": calcHealth})
@@ -314,9 +468,10 @@ def dashboardPage(requests, username):
                     calcMotivation = (character.motivation / character.current_motivation)
                 if character.current_health > 0:
                     calcHealth = (character.health / character.current_health)
-                    print(calcHealth)
+                    # print(calcHealth)
                 return render(requests, "dashboard.html", {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests,
-                                                           "items": last_four_items, "character": character,"calcMotivation": calcMotivation,
+                                                           "items": last_four_items, "character": character,
+                                                           "calcMotivation": calcMotivation,
                                                            "calcHealth": calcHealth})
 
 
@@ -495,8 +650,6 @@ def blackSmithFetch(request, username):
                     "current_durability": current_durability,
                 })
 
-
-
             return JsonResponse({'message': "Repair", 'items': item_data}, status=200)
         elif message == "upgrade":
             items = list(character.weapons.all()) + list(character.armor.all())
@@ -550,7 +703,7 @@ def blackSmithFetch(request, username):
                 if hasattr(item.item, "forgeIngredient")
             ]
 
-           # print(item_data)
+            # print(item_data)
 
             return JsonResponse({'message': "Repair", 'items': item_data, 'ingredients': ingredients}, status=200)
 
@@ -573,7 +726,7 @@ def blackSmithFetch(request, username):
 
         elif message == "forge":
             data = json.loads(request.body.decode('utf-8'))
-            #item = data.get('itemId')
+            # item = data.get('itemId')
             itemName = data.get('itemName')
             weapon_exists = Weapon.objects.filter(name=itemName).exists()
             armor_exists = Armor.objects.filter(name=itemName).exists()
@@ -638,11 +791,11 @@ def blackSmithFetch(request, username):
             if Weapon.objects.filter(name=itemName).first():
                 weapon = character.weapons.get(name=itemName)
                 weaponBag = WeaponBag.objects.filter(character=character.id, weapon=weapon.id).first()
-                #print(heldIngredients)
+                # print(heldIngredients)
                 ingredients = equipablesIngredients.objects.filter(weapon_id=weapon.id)
                 for ingredient in ingredients:
                     item = BackpackItem.objects.get(item_id=ingredient.item_id, character_id=character.id)
-                    #print(item)
+                    # print(item)
                     if item:
                         if item.quantity - ingredient.quantity < 0:
                             return JsonResponse({'message': f"Missing or insufficient quantity for {item.item.name}"})
@@ -679,10 +832,167 @@ def blackSmithFetch(request, username):
                 return JsonResponse({'message': "Armor upgraded"}, status=200)
 
 
+# may not need
 @login_required
 def healthMotivation(request, username):
     return JsonResponse({'message': "Hi"})
 
 
+# may not need
+
+@login_required
 def ironsteadPage(request, username):
     return render(request, "ironstead.html")
+
+
+@login_required
+def trainingView(request, username):
+    user = CustomUser.objects.get(username=username)
+    character = user.character
+    weapon_bag = WeaponBag.objects.filter(character_id=character.id).first()
+    if weapon_bag:
+        weapon_name = weapon_bag.weapon.name
+        weapon_data = {
+            'weapon_name': weapon_name,
+            'weapon_id': weapon_bag.weapon_id
+        }
+    else:
+        weapon_data = {}
+    skills = Skill.objects.all()
+    magic = magicTome.objects.all()
+    magicJson = json.loads(serialize('json', magic))
+    magicData = [item['fields'] for item in magicJson]
+    return render(request, "ironsteadTraining.html", {'user': user, "character": character, "weapon": weapon_data,
+                                                      "skills": skills, "magic": magicData})
+
+
+@login_required
+def trainingGrab(request, username):
+    if request.method == "GET":
+        message = request.headers.get('X-Custom-Message')
+        userName = request.headers.get('X-Custom-User')
+        user = CustomUser.objects.get(username=userName)
+        character = user.character
+        skill = Skill.objects.filter(name=message).first()
+        try:
+            weapon = WeaponBag.objects.filter(weapon_id=message, character_id=character.id)
+        except ValueError:
+            weapon = None
+        magic = Magic.objects.filter(name=message).first() # need to change to magicTome
+
+        if skill:
+            skill = {"name": skill.name, "description": skill.description, 'level_required': skill.level_required,
+                     'skill_type': skill.skill_type,
+                     'damage': skill.damage, 'max_damage': skill.max_damage, 'healing': skill.healing,
+                     'max_healing': skill.max_healing}
+
+            skillName = Skill.objects.get(name=message)
+            skillset = skillSet.objects.filter(skill_id=skillName.id, character_id=character.id)
+            if skillset:
+                skillsetJson = json.loads(serialize('json', skillset))
+                skillsetData = skillsetJson[0]['fields']
+                return JsonResponse({"skill": skill, "skillSet": skillsetData})
+            else:
+                return JsonResponse({"skill": skill})
+        elif weapon:
+            weaponJson = json.loads(serialize('json', weapon))
+            weaponBagData = weaponJson[0]['fields']
+            weapon_id = weaponBagData['weapon']
+            weaponModel = Weapon.objects.get(id=weapon_id)
+            data = {
+                "weapon_name": weaponModel.name,
+                "weapon_desc": weaponModel.description,
+            }
+            return JsonResponse({"weaponBag": weaponBagData, "data": data})
+        elif magic:
+            magicData = {
+                "name": magic.name,
+                "desc": magic.description,
+                "damage": magic.damage,
+                "healing": magic.healing
+            }
+            return JsonResponse({"magic": magicData})
+
+        else:
+            return JsonResponse({"message": message})
+
+    elif request.method == "POST":
+        message = request.headers.get('X-Custom-Message')
+        userName = request.headers.get('X-Custom-User')
+        user = CustomUser.objects.get(username=userName)
+        character = user.character
+        if message == "skill":
+            data = json.loads(request.body.decode('utf-8'))
+            message = data.get('message')
+            skill = Skill.objects.get(name=message)
+            result = addSkill(skill, character)
+            character.current_motivation = character.current_motivation - 1
+            character.save()
+            if result == "Max Efficiency":
+                return JsonResponse({"message": "skill is maxed out"})
+            else:
+                return JsonResponse(
+                    {'message': "Skill received", "result": result, "currentMotivation": character.current_motivation,
+                     "maxMotivation": character.motivation})
+
+        elif message == "weapon":
+            data = json.loads(request.body.decode('utf-8'))
+            name = data.get('name')
+            type = data.get('trainType')
+            weapon = Weapon.objects.get(name=name)
+            weapon_bag = WeaponBag.objects.get(character_id=character.id, weapon_id=weapon.id)
+            result = practiceWeapon(weapon, weapon_bag, character, type)
+            if result == 1:  # 0.25
+                message = "Failure is the stepping stones to success!"
+            elif result == 2:  # 0.50
+                message = "I can do anything I put my mind too!"
+            elif result == 3:  # 1
+                message = "I will win, even if it costs my life!"
+
+            if character.current_health <= 0:
+                return JsonResponse({'message': "You died", 'redirect': reverse('deadView', kwargs={'username': userName})})
+            return JsonResponse({"message": message, "currentMotivation": character.current_motivation,
+                                 "currentHealth": character.current_health, "maxHealth": character.health,
+                                 "maxMotivation": character.motivation, 'efficiency': weapon_bag.weapon_efficiency})
+
+        elif message == "magic":
+            data = json.loads(request.body.decode('utf-8'))
+            name = data.get('name')
+            type = data.get('trainType')
+            magic = Magic.objects.get(name=name)
+            magic_tome = magicTome.objects.get(character_id=character.id, magic_id=magic.id)
+            result = practiceMagic(magic, magic_tome, character, type)
+            if result == 1:  # 0.25
+                message = "Failure is the stepping stones to success!"
+            elif result == 2:  # 0.50
+                message = "I can do anything I put my mind too!"
+            elif result == 3:  # 1
+                message = "I will win, even if it costs my life!"
+
+            if character.current_health <= 0:
+                return JsonResponse({'message': "You died", 'redirect': reverse('deadView', kwargs={'username': userName})})
+            return JsonResponse({"message": message, "currentMotivation": character.current_motivation,
+                                 "currentHealth": character.current_health, "maxHealth": character.health,
+                                 "maxMotivation": character.motivation, 'efficiency': magic_tome.weapon_efficiency})
+        else:
+            return JsonResponse({'message': "POST"})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# deadView
+def deadView(request, username):
+    return render(request, 'deadView.html')
+
+
