@@ -1,19 +1,31 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
-
 from .forms import *
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
-
+from asgiref.sync import sync_to_async
 from core.models import *
 from django.http import JsonResponse, HttpResponseRedirect
 import json
 import random
+from django.db.models import F
 from datetime import datetime
 
 
+@sync_to_async(thread_sensitive=True)
+def get_user_character(username):
+    try:
+        user = CustomUser.objects.select_related('character__rank').get(username=username)
+        character = user.character
+
+        return user, character
+    except CustomUser.DoesNotExist:
+        return None, None
+
+
+@sync_to_async(thread_sensitive=True)
 def finish_task(index, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
@@ -70,6 +82,7 @@ def finish_task(index, username):
         return {'NumberQuest': new_number_of_quests, 'drops': drops, 'charExp': charExp, "messageBoard": messageBoard}
 
 
+@sync_to_async(thread_sensitive=True)
 def get_random_quests(num_quests, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
@@ -81,6 +94,7 @@ def get_random_quests(num_quests, username):
     return random_quests
 
 
+@sync_to_async(thread_sensitive=True)
 def named_drops(drop):
     items = Item.objects.filter(id__in=drop)
     id_to_name = {item.id: item.name for item in items}
@@ -88,6 +102,7 @@ def named_drops(drop):
     return names
 
 
+@sync_to_async
 def addItemToBag(itemToAdd, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
@@ -132,6 +147,7 @@ def check_Magic_Efficiency(efficiency, magicTome, magic):
     magicTome.save()
 
 
+@sync_to_async
 def addWeapon(itemName, character):
     weaponToAdd = Weapon.objects.get(name=itemName)
     backpack = BackpackItem.objects.filter(character_id=character.id, item__forgeIngredient=True, )
@@ -175,6 +191,7 @@ def addWeapon(itemName, character):
     return JsonResponse({'message': 'Completed', 'ingredients': ingredientsList}, status=200)
 
 
+@sync_to_async
 def addArmor(itemName, character):
     armorToAdd = Armor.objects.get(name=itemName)
     backpack = BackpackItem.objects.filter(character_id=character.id, item__forgeIngredient=True, )
@@ -220,6 +237,7 @@ def addArmor(itemName, character):
     return JsonResponse({'message': 'Completed', "ingredients": ingredientsList}, status=200)
 
 
+@sync_to_async(thread_sensitive=True)
 def addSkill(skill, character):
     skillset = skillSet.objects.filter(character_id=character.id, skill_id=skill.id).first()
     if skillset:
@@ -246,6 +264,7 @@ def addSkill(skill, character):
         return {"message": "LevelUp", "efficiency": skillset.efficiency}
 
 
+@sync_to_async(thread_sensitive=True)
 def practiceWeapon(weapon, weapon_bag, character, type):
     if type == 'safe':
         if weapon_bag.weapon_efficiency <= 5:
@@ -299,6 +318,7 @@ def practiceWeapon(weapon, weapon_bag, character, type):
             return 3  # amazing
 
 
+@sync_to_async(thread_sensitive=True)
 def practiceMagic(magic, magic_tome, character, type):
     if type == 'safe':
         if magic_tome.spell_efficiency <= 5:
@@ -350,42 +370,145 @@ def practiceMagic(magic, magic_tome, character, type):
             return 3  # amazing
 
 
+def load_serial(type):
+    Json = json.loads(serialize('json', type))
+    Data = [item['fields'] for item in Json]
+    print(Data)
+    return Data
+
+
+@sync_to_async
+def get_last_four_items(character):
+    listt = list(BackpackItem.objects.filter(character=character).order_by('-id')[:4])
+    backpack_items_data = []
+    for item in listt:
+        backpack_items_data.append({
+            'item_name': item.item.name,
+        })
+    return backpack_items_data
+
+
+@sync_to_async
+def get_backpack_data(character_id, route):
+    if route == "blacksmith":
+        result = list(BackpackItem.objects.filter(
+            character_id=character_id,
+            item__forgeIngredient=True,
+        ))
+        backpack_data = [
+            {
+                "id": item.item_id,
+                "name": item.item.name,
+                "quantity": item.quantity,
+            }
+            for item in result
+        ]
+        return backpack_data
+    else:
+        result = list(BackpackItem.objects.filter(
+            character_id=character_id,
+        ))
+        backpack_data = [
+            {
+                "id": item.item_id,
+                "name": item.item.name,
+                "quantity": item.quantity,
+            }
+            for item in result
+        ]
+        return backpack_data
+
+
+@sync_to_async
+def get_magic_data(character_id):
+    result = list(magicTome.objects.filter(
+        character_id=character_id,
+    ))
+    magic_data = [
+        {
+            "id": item.magic_id,
+            "name": item.magic.name,
+        }
+        for item in result
+    ]
+    return magic_data
+
+
+@sync_to_async
+def get_skills_data(character_id):
+    result = list(skillSet.objects.filter(
+        character_id=character_id,
+    ))
+    skill_data = [
+        {
+            "id": item.skill_id,
+            "name": item.skill.name,
+        }
+        for item in result
+    ]
+    return skill_data
+
+
+@sync_to_async
+def forgeableFun(armors, weapons, backpack):
+    print(backpack)
+    forgeables = []
+    for item in weapons + armors:
+        item_type = 'weapon' if isinstance(item, Weapon) else 'armor'
+        forgeables.append({
+            "name": item.name,
+            "id": item.id,
+            "type": item_type,
+            "ingredients": [
+                {"name": ingredient.item.name, "quantity": ingredient.quantity}
+                for ingredient in equipablesIngredients.objects.filter(
+                    **{item_type: item}
+                )
+            ]
+        })
+    return forgeables
+
+
+
+
+
 # routes
 
 def homePage(request):
     return render(request, template_name="home.html")
 
 
-def loginPage(request):
+async def loginPage(request):
     if request.method == "POST":
         form = loginForm(data=request.POST or None)
         RegForm = CustomUserCreationForm(data=request.POST or None)
-        if form.is_valid():
+        is_valid_reg = await sync_to_async(RegForm.is_valid)()
+        is_valid_login = await sync_to_async(form.is_valid)()
+        if is_valid_login:
             username = request.POST.get('username')
             password = request.POST.get('password')
-            user = authenticate(request, username=username, password=password)
+            user = await sync_to_async(authenticate)(request, username=username, password=password)
             if user is not None:
-                login(request, user)
+                await sync_to_async(login)(request, user)
                 return redirect('dashboard', username=username)
-        if RegForm.is_valid():
-            RegForm.save()
+        if is_valid_reg:
+            await sync_to_async(RegForm.save)()
             username = RegForm.cleaned_data['username']
             password = RegForm.cleaned_data['password1']
-
-            user = authenticate(request, username=username, password=password)
+            user = await sync_to_async(authenticate)(request, username=username, password=password)
             if user is not None:
-                login(request, user)
-                rank = Rank.objects.get(name="Weak")
-                user1 = CustomUser.objects.get(username=username)
-                new_character = Character.objects.create(character_name=username)
-                character = Character.objects.get(character_name=username)
+                await sync_to_async(login)(request, user)
+                rank = await Rank.objects.aget(name="Weak")
+                user1 = await CustomUser.objects.aget(username=username)
+                new_character = await Character.objects.acreate(character_name=username)
+                character = await Character.objects.aget(character_name=username)
                 character.rank = rank
                 user1.character = new_character
-                user1.save()
-                character.save()
+                await sync_to_async(user1.save)()
+                await sync_to_async(character.save)()
                 return redirect('dashboard', username=username)
         else:
-            print(RegForm.errors)
+            #print(RegForm.errors)
             return redirect('home')
     else:
         form = loginForm()
@@ -400,14 +523,12 @@ def logoutPage(request):
 
 
 @login_required
-def dashboardPage(requests, username):
-    user = CustomUser.objects.get(username=username)
-    character = user.character
+async def dashboardPage(requests, username):
+    user, character = await get_user_character(username)
     if user.base_number_of_quests > 0:
         user.weekly_quests_count = user.base_number_of_quests * 7
-        user.save()
-    backpack_items = BackpackItem.objects.filter(character=character)
-    last_four_items = backpack_items.order_by('-id')[:1]
+        await sync_to_async(user.save)()
+    last_four_items = await get_last_four_items(character)
     number_of_quests = user.number_of_quests
     if requests.method == "POST":
         data = json.loads(requests.body.decode('utf-8'))
@@ -417,17 +538,17 @@ def dashboardPage(requests, username):
             questID = data.get('questID')
             # print(f"change_noq is {NumberQuests}")
             user.number_of_quests = NumberQuests
-            quest_to_remove = character.quests.filter(id=questID)
-            character.quests.remove(*quest_to_remove)
-            user.save()
-            character.save()
+            quest_to_remove = await sync_to_async(character.quests.filter(id=questID).first)()
+            await sync_to_async(character.quests.remove)(quest_to_remove)
+            await sync_to_async(user.save)()
+            await sync_to_async(character.save)()
             new_num_quests = user.number_of_quests
             return JsonResponse(
                 {"message": "Task completed successfully from dashboard!", "newNumQuest": new_num_quests}, status=200)
         elif message == 'Get quest details!':  # gets quest details from frontend
             data = json.loads(requests.body.decode('utf-8'))
             quests = data.get('quests')
-            fetchedQuest = dailyQuest.objects.filter(quest_name__in=quests)
+            fetchedQuest = await sync_to_async(list)(dailyQuest.objects.filter(quest_name__in=quests))
             questDescription = {}
             for i in fetchedQuest:
                 questDescription[i.quest_name] = i.quest_description
@@ -445,7 +566,7 @@ def dashboardPage(requests, username):
                                                        "calcMotivation": calcMotivation, "calcHealth": calcHealth})
         else:
             if user.gotten_quests:
-                dquest = character.quests.all()
+                dquest = await sync_to_async(list)(character.quests.all())
                 # print(character.current_motivation)
                 if character.current_motivation > 0:
                     calcMotivation = (character.current_motivation / character.motivation * 100)
@@ -456,14 +577,15 @@ def dashboardPage(requests, username):
                     # print(calcHealth)
                 else:
                     calcHealth = 0
+
                 return render(requests, "dashboard.html",
                               {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests, "items": last_four_items,
                                "character": character, "calcMotivation": calcMotivation, "calcHealth": calcHealth})
             else:
-                character.quests.clear()
+                await sync_to_async(character.quests.clear)()
                 user.gotten_quests = True
-                user.save()
-                dquest = get_random_quests(number_of_quests, username)
+                await sync_to_async(user.save)()
+                dquest = await get_random_quests(number_of_quests, username)
                 if character.current_motivation > 0:
                     calcMotivation = (character.motivation / character.current_motivation)
                 if character.current_health > 0:
@@ -476,12 +598,12 @@ def dashboardPage(requests, username):
 
 
 @login_required
-def finish_task_route(request, username):
+async def finish_task_route(request, username):
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
         task_index = data.get('taskIndex')
 
-        task_complete = finish_task(task_index, username)  # sends to function
+        task_complete = await finish_task(task_index, username)  # sends to function
 
         # desturctue the task_complete
         NumberQuest = task_complete.get('NumberQuest')
@@ -494,10 +616,10 @@ def finish_task_route(request, username):
         else:
             pass
         # process drops
-        named_drop = named_drops(drops)
+        named_drop = await named_drops(drops)
         # db query
-        completedQuest = dailyQuest.objects.get(quest_name=questName)
-        user = CustomUser.objects.get(username=username)
+        completedQuest = await dailyQuest.objects.aget(quest_name=questName)
+        user = await CustomUser.objects.aget(username=username)
         # send out from queries
         completed = user.percent_weekly_completed
         questID = completedQuest.id
@@ -510,14 +632,18 @@ def finish_task_route(request, username):
                     "questID": questID,
                     "messageBoard": messageB
                     }
+        print(send_out)
         return JsonResponse(send_out, status=200)
 
 
 @login_required
-def characterPage(request, username):
-    user = CustomUser.objects.get(username=username)
-    character = user.character
-    return render(request, "character.html", {'character': character, 'user': user})
+async def characterPage(request, username):
+    user, character = await get_user_character(username)
+    backpack = await get_backpack_data(character.id, "character")
+    spellBook = await get_magic_data(character.id)
+    skillset = await get_skills_data(character.id)
+    return render(request, "character.html", {"user": user, "character": character, "backpack": backpack,
+                                              "spellBook": spellBook, "skillSet": skillset})
 
 
 @login_required
@@ -526,118 +652,84 @@ def worldMapPage(request, username):
 
 
 @login_required
-def marketView(request, username):
-    user = CustomUser.objects.get(username=username)
-    character = user.character
+async def marketView(request, username):
+    user, character = await get_user_character(username)
     return render(request, "market.html", {'user': user, "character": character})
 
 
 @login_required
-def marketViewSendItems(request, username):
-    items = Item.objects.filter(marketable=True)
+async def marketViewSendItems(request, username):
     if request.method == "GET":
+        items = await sync_to_async(list)(
+            Item.objects.filter(marketable=True).order_by('?')
+        )
         itemsToPage = []
-        randomized_items = items.order_by('?')
-        for item in randomized_items:
+        for item in items:
             if random.uniform(0, 100) <= item.market_drop_rate:
                 itemsToPage.append({
                     'item': item.name,
                     'price': item.price,
                     'description': item.description,
-                    'type': item.type
-
+                    'type': item.type,
                 })
-        return JsonResponse(itemsToPage, status=200, safe=False, )
+        return JsonResponse(itemsToPage, status=200, safe=False)
 
-    if request.method == "POST":
+    elif request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
-        user = data.get('username')
-        item = data.get('itemName')
-        result = addItemToBag(item, user)
+        user_name = data.get('username')
+        item_name = data.get('itemName')
+        result = await sync_to_async(addItemToBag)(item_name, user_name)
         if result == 1:
-            send_out = {"message": "Task completed successfully!", "item": item}
+            send_out = {"message": "Task completed successfully!", "item": item_name}
             return JsonResponse(send_out, status=200)
         else:
-            send_out = {"message": "Insufficient funds", "item": item}
+            send_out = {"message": "Insufficient funds", "item": item_name}
             return JsonResponse(send_out, status=200)
 
 
 @login_required
-def blackSmithView(request, username):
-    user = CustomUser.objects.get(username=username)
-    character = user.character
+async def blackSmithView(request, username):
+    user, character = await get_user_character(username)
     return render(request, "blackSmith.html", {'user': user, "character": character})
 
 
 @login_required
-def blackSmithFetch(request, username):
+async def blackSmithFetch(request, username):
     if request.method == "GET":
         message = request.headers.get('X-Custom-Message')
         userName = request.headers.get('X-Custom-User')
-        user = CustomUser.objects.get(username=userName)
-        character = user.character
-        backpack = BackpackItem.objects.filter(
-            character_id=character.id,
-            item__forgeIngredient=True,
-        )
-        backpack_data = [
-            {
-                "id": item.item_id,
-                "name": item.item.name,
-                "quantity": item.quantity,
-            }
-            for item in backpack
-        ]
+        user, character = await get_user_character(userName)
+        backpack = await get_backpack_data(character.id, 'blacksmith')
+
 
         if message == "smelt":
             filtered_backpack_data = [
-                item for item in backpack_data if "ore" in item["name"].lower()
+                item for item in backpack if "ore" in item["name"].lower()
             ]
             if not filtered_backpack_data:
                 return JsonResponse({'message': 'Completed'}, status=200)
             else:
                 return JsonResponse({'message': 'Completed', 'backpack': filtered_backpack_data}, status=200)
         elif message == "forge":
-            forgeables = []
-            weapons = Weapon.objects.filter(forgeable=True)
-            armors = Armor.objects.filter(forgeable=True)
-            for item in list(weapons) + list(armors):
-                item_type = 'weapon' if isinstance(item, Weapon) else 'armor'
-                forgeables.append({
-                    "name": item.name,
-                    "id": item.id,
-                    "type": item_type,
-                    "ingredients": [
-                        {"name": ingredient.item.name, "quantity": ingredient.quantity}
-                        for ingredient in equipablesIngredients.objects.filter(
-                            **{item_type: item}
-                        )
-                    ]
-                })
-
-            items = [
-                {"id": item.item_id,
-                 "name": item.item.name,
-                 "quantity": item.quantity}
-                for item in backpack
-                if hasattr(item.item, "forgeIngredient")
-            ]
-            if not items:
+            weapons = await sync_to_async(list)(Weapon.objects.filter(forgeable=True))
+            armors = await sync_to_async(list)(Armor.objects.filter(forgeable=True))
+            forgeables = await forgeableFun(armors, weapons, backpack)
+            if not backpack:
                 return JsonResponse({'message': 'Forge', "forgeables": forgeables}, status=200)
             else:
-                return JsonResponse({'message': 'Forge', "items": items, "forgeables": forgeables}, status=200)
+                return JsonResponse({'message': 'Forge', "items": backpack, "forgeables": forgeables}, status=200)
         elif message == "repair":
-            items = list(character.weapons.all()) + list(character.armor.all())
-
+            items = [item async for item in character.weapons.all()] + [item async for item in character.armor.all()]
+            print(items)
             item_data = []
 
             for item in items:
                 if isinstance(item, Weapon):
-                    Cquantity = WeaponBag.objects.filter(character=character.id, weapon=item.id).first()
+                    Cquantity = await WeaponBag.objects.filter(character=character.id, weapon=item.id).afirst()
                     current_durability = Cquantity.current_durability
                     item_type = "weapon"
                 elif isinstance(item, Armor):
-                    Cquantity = ArmorBag.objects.filter(character=character.id, armor=item.id).first()
+                    Cquantity = await ArmorBag.objects.filter(character=character.id, armor=item.id).afirst()
                     current_durability = Cquantity.current_durability
                     item_type = "armor"
 
@@ -649,10 +741,12 @@ def blackSmithFetch(request, username):
                     "max_durability": item.max_durability,
                     "current_durability": current_durability,
                 })
+                print(item_data)
 
             return JsonResponse({'message': "Repair", 'items': item_data}, status=200)
         elif message == "upgrade":
-            items = list(character.weapons.all()) + list(character.armor.all())
+            items = [item async for item in character.weapons.all()] + [item async for item in character.armor.all()]
+
             item_data = [
                 {
                     "id": item.id,
@@ -662,82 +756,71 @@ def blackSmithFetch(request, username):
                     "upgradedDefense": item.defense + 2 if hasattr(item, 'defense') else None,
                     "ingredients": [
                         {"name": ingredient.item.name, "quantity": ingredient.quantity}
-                        for ingredient in item.equipablesingredients_set.all()
-                    ] if hasattr(item, 'crafting_ingredients') else None,
+                        async for ingredient in item.equipablesingredients_set.select_related("item").all()
+                    ] if hasattr(item, "equipablesingredients_set") else None,
                     "weaponLevel": {
                         "current_level": (
-                            item.weaponbag_set.filter(character_id=character.id).first().current_level
-                            if item.weaponbag_set.exists() else None
-                        ),
-                    } if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
+                                (weapon := await item.weaponbag_set.filter(character_id=character.id).afirst())
+                                and weapon.current_level
+                        ) if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
+                    },
                     "armorLevel": {
                         "current_level": (
-                            item.armorbag_set.filter(character_id=character.id).first().current_level
-                            if item.armorbag_set.exists() else None
-                        ),
-                    } if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
-
-                    'updatedDam': {
+                                (armor := await item.armorbag_set.filter(character_id=character.id).afirst())
+                                and armor.current_level
+                        ) if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
+                    },
+                    "updatedDam": {
                         "upgraded_damage": (
-                            item.weaponbag_set.filter(character_id=character.id).first().upgraded_damage
-                            if item.weaponbag_set.exists() else None
-                        ),
-                    } if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
-
-                    'updatedDen': {
+                                (weapon := await item.weaponbag_set.filter(character_id=character.id).afirst())
+                                and weapon.upgraded_damage
+                        ) if isinstance(item, Weapon) and hasattr(item, "weaponbag_set") else None,
+                    },
+                    "updatedDen": {
                         "upgraded_defense": (
-                            item.armorbag_set.filter(character_id=character.id).first().upgraded_defense
-                            if item.armorbag_set.exists() else None
-                        ),
-                    } if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
-
+                                (armor := await item.armorbag_set.filter(character_id=character.id).afirst())
+                                and armor.upgraded_defense
+                        ) if isinstance(item, Armor) and hasattr(item, "armorbag_set") else None,
+                    },
                     "upgradedDamage": item.damage + 2 if hasattr(item, 'damage') else None,
                 }
                 for item in items
             ]
-            ingredients = [
-                {"id": item.item_id,
-                 "name": item.item.name,
-                 "quantity": item.quantity}
-                for item in backpack
-                if hasattr(item.item, "forgeIngredient")
-            ]
 
-            # print(item_data)
+            #print(item_data)
 
-            return JsonResponse({'message': "Repair", 'items': item_data, 'ingredients': ingredients}, status=200)
+            return JsonResponse({'message': "Repair", 'items': item_data, 'ingredients': backpack}, status=200)
 
     elif request.method == "POST":
         message = request.headers.get('X-Custom-Message')
         userName = request.headers.get('X-Custom-User')
-        user = CustomUser.objects.get(username=userName)
-        character = user.character
+        user, character = await get_user_character(userName)
         if message == "smelt":
             data = json.loads(request.body.decode('utf-8'))
             item = data.get('OreId')
             itemName = data.get('OreName')
             Ingot = itemName.replace("Ore", "Ingot")
-            Ore = BackpackItem.objects.filter(item_id=item).first()
+            Ore = await BackpackItem.objects.filter(item_id=item).afirst()
             if Ore:
                 Ore.quantity = Ore.quantity - 2
-                Ore.save()
-                addItemToBag(Ingot, userName)
+                await sync_to_async(Ore.save)()
+                await addItemToBag(Ingot, userName)
                 return JsonResponse({'message': 'Completed'}, status=200)
 
         elif message == "forge":
             data = json.loads(request.body.decode('utf-8'))
             # item = data.get('itemId')
             itemName = data.get('itemName')
-            weapon_exists = Weapon.objects.filter(name=itemName).exists()
-            armor_exists = Armor.objects.filter(name=itemName).exists()
+            weapon_exists = await Weapon.objects.filter(name=itemName).aexists()
+            armor_exists = await Armor.objects.filter(name=itemName).aexists()
 
             if weapon_exists:
-                result = addWeapon(itemName, character)
+                result = await addWeapon(itemName, character)
                 print(result)
                 return result
 
             elif armor_exists:
-                result = addArmor(itemName, character)
+                result = await addArmor(itemName, character)
                 print(result)
                 return result
 
@@ -748,16 +831,16 @@ def blackSmithFetch(request, username):
             itemCost = data.get('repair_cost')
             itemId = data.get('itemId')
             if itemType == 'weapon':
-                weapon = character.weapons.get(name=itemName)
-                weaponBag = WeaponBag.objects.filter(character=character.id, weapon=itemId).first()
+                weapon = await character.weapons.aget(name=itemName)
+                weaponBag = await WeaponBag.objects.filter(character=character.id, weapon=itemId).afirst()
 
                 weaponBag.current_durability = weapon.max_durability
                 if character.gold - itemCost < 0:
                     return JsonResponse({"message": "Insufficient funds"}, status=200)
                 else:
                     character.gold = character.gold - itemCost
-                    weaponBag.save()
-                    character.save()
+                    await sync_to_async(weaponBag.save)()
+                    await sync_to_async(character.save)()
                     sendData = {
                         "newDur": weaponBag.current_durability,
                         "maxDur": weapon.max_durability
@@ -766,16 +849,16 @@ def blackSmithFetch(request, username):
 
                     return JsonResponse({"message": "item repaired", "data": sendData}, status=200)
             elif itemType == 'armor':
-                armor = character.armor.get(name=itemName)
-                armorBag = ArmorBag.objects.filter(character=character.id, armor=itemId).first()
+                armor = await character.armor.aget(name=itemName)
+                armorBag = await ArmorBag.objects.filter(character=character.id, armor=itemId).afirst()
 
                 armorBag.current_durability = armor.max_durability
                 if character.gold - itemCost < 0:
                     return JsonResponse({"message": "Insufficient funds"}, status=200)
                 else:
                     character.gold = character.gold - itemCost
-                    armorBag.save()
-                    character.save()
+                    await sync_to_async(armorBag.save)()
+                    await sync_to_async(character.save)()
                     sendData = {
                         "newDur": armorBag.current_durability,
                         "maxDur": armor.max_durability
@@ -787,48 +870,54 @@ def blackSmithFetch(request, username):
             data = json.loads(request.body.decode('utf-8'))
             itemName = data.get('item')
             id = data.get('itemId')
-            heldIngredients = BackpackItem.objects.filter(character_id=character.id)
-            if Weapon.objects.filter(name=itemName).first():
-                weapon = character.weapons.get(name=itemName)
-                weaponBag = WeaponBag.objects.filter(character=character.id, weapon=weapon.id).first()
+            #heldIngredients = BackpackItem.objects.filter(character_id=character.id)
+            if await Weapon.objects.filter(name=itemName).afirst():
+                weapon = await character.weapons.aget(name=itemName)
+                weaponBag = await WeaponBag.objects.filter(character=character.id, weapon=weapon.id).afirst()
                 # print(heldIngredients)
-                ingredients = equipablesIngredients.objects.filter(weapon_id=weapon.id)
+                ingredients = await sync_to_async(list)(equipablesIngredients.objects.filter(weapon_id=weapon.id))
                 for ingredient in ingredients:
-                    item = BackpackItem.objects.get(item_id=ingredient.item_id, character_id=character.id)
+                    item = await BackpackItem.objects.aget(item_id=ingredient.item_id, character_id=character.id)
                     # print(item)
                     if item:
-                        if item.quantity - ingredient.quantity < 0:
-                            return JsonResponse({'message': f"Missing or insufficient quantity for {item.item.name}"})
+                        if item.quantity < ingredient.quantity - 1:
+                            item_name = await Item.objects.aget(id=ingredient.item_id)
+                            return JsonResponse({'message': f"Missing or insufficient quantity for {item_name}"})
                         else:
-                            item.quantity = item.quantity - ingredient.quantity
-                            item.save()
+                            item.quantity = item.quantity - (ingredient.quantity - 1)
+                            await sync_to_async(item.save)()
 
                 weaponBag.current_level = weaponBag.current_level + 1
                 if weaponBag.upgraded_damage == 0:
                     weaponBag.upgraded_damage = weapon.damage
                 else:
                     weaponBag.upgraded_damage = weaponBag.upgraded_damage + 2
-                weaponBag.save()
+                await sync_to_async(weaponBag.save)()
                 return JsonResponse({'message': "Weapon upgraded"}, status=200)
-            elif Armor.objects.filter(name=itemName).first():
-                armor = character.armor.get(name=itemName)
-                armorBag = ArmorBag.objects.filter(character=character.id, armor=armor.id).first()
+            elif await Armor.objects.filter(name=itemName).afirst():
+                armor = await character.armor.aget(name=itemName)
+                armorBag = await ArmorBag.objects.filter(character=character.id, armor=armor.id).afirst()
                 # print(heldIngredients)
-                ingredients = equipablesIngredients.objects.filter(armor_id=armor.id)
+                ingredients = await sync_to_async(list)(equipablesIngredients.objects.filter(armor_id=armor.id))
                 for ingredient in ingredients:
-                    item = BackpackItem.objects.get(item_id=ingredient.item_id, character_id=character.id)
+                    print(ingredient.item_id)
+                for ingredient in ingredients:
+                    item = await BackpackItem.objects.aget(item_id=ingredient.item_id, character_id=character.id)
+                    #print(ingredient)
                     if item:
-                        if item.quantity - ingredient.quantity < 0:
-                            return JsonResponse({'message': f"Missing or insufficient quantity for {item.item.name}"})
+                        print(item.quantity)
+                        if item.quantity - (ingredient.quantity - 1) < 0:
+                            item_name = await Item.objects.aget(id=ingredient.item_id)
+                            return JsonResponse({'message': f"Missing or insufficient quantity for {item_name}"})
                         else:
-                            item.quantity = item.quantity - ingredient.quantity
-                            item.save()
+                            item.quantity = item.quantity - (ingredient.quantity - 1)
+                            await sync_to_async(item.save)()
                 armorBag.current_level = armorBag.current_level + 1
                 if armorBag.upgraded_defense == 0:
                     armorBag.upgraded_defense = armor.defense
                 else:
                     armorBag.upgraded_defense = armorBag.upgraded_defense + 2
-                armorBag.save()
+                await sync_to_async(armorBag.save)()
                 return JsonResponse({'message': "Armor upgraded"}, status=200)
 
 
@@ -846,39 +935,48 @@ def ironsteadPage(request, username):
 
 
 @login_required
-def trainingView(request, username):
-    user = CustomUser.objects.get(username=username)
-    character = user.character
-    weapon_bag = WeaponBag.objects.filter(character_id=character.id).first()
+async def trainingView(request, username):
+    user, character = await get_user_character(username)
+    weapon_bag = await sync_to_async(WeaponBag.objects.filter(character_id=character.id).first)()
     if weapon_bag:
-        weapon_name = weapon_bag.weapon.name
+        weapon = await sync_to_async(Weapon.objects.get)(id=weapon_bag.weapon_id)
+        weapon_name = weapon.name
         weapon_data = {
             'weapon_name': weapon_name,
             'weapon_id': weapon_bag.weapon_id
         }
     else:
         weapon_data = {}
-    skills = Skill.objects.all()
-    magic = magicTome.objects.all()
-    magicJson = json.loads(serialize('json', magic))
-    magicData = [item['fields'] for item in magicJson]
+    skills = await sync_to_async(list)(Skill.objects.all())
+    magic_tome = await sync_to_async(magicTome.objects.filter(character_id=character.id).first)()
+    if magic_tome:
+        magic = await sync_to_async(Magic.objects.get)(id=magic_tome.magic_id)
+        spell_name = magic.name
+        magic_data = {
+            'spell_name': spell_name,
+            'spell_id': magic_tome.magic_id
+        }
+    else:
+        magic_data = {}
     return render(request, "ironsteadTraining.html", {'user': user, "character": character, "weapon": weapon_data,
-                                                      "skills": skills, "magic": magicData})
+                                                      "skills": skills, "magic": magic_data})
+
 
 
 @login_required
-def trainingGrab(request, username):
+async def trainingGrab(request, username):
     if request.method == "GET":
         message = request.headers.get('X-Custom-Message')
         userName = request.headers.get('X-Custom-User')
-        user = CustomUser.objects.get(username=userName)
-        character = user.character
-        skill = Skill.objects.filter(name=message).first()
+        user, character = await get_user_character(userName)
+        skill = await Skill.objects.filter(name=message).afirst()
         try:
-            weapon = WeaponBag.objects.filter(weapon_id=message, character_id=character.id)
+            weapon = await sync_to_async(list)(WeaponBag.objects.filter(weapon_id=message, character_id=character.id))
+            magic = await sync_to_async(list)(magicTome.objects.filter(magic_id=message, character_id=character.id))
+
         except ValueError:
-            weapon = None
-        magic = Magic.objects.filter(name=message).first() # need to change to magicTome
+            None, None
+
 
         if skill:
             skill = {"name": skill.name, "description": skill.description, 'level_required': skill.level_required,
@@ -886,32 +984,31 @@ def trainingGrab(request, username):
                      'damage': skill.damage, 'max_damage': skill.max_damage, 'healing': skill.healing,
                      'max_healing': skill.max_healing}
 
-            skillName = Skill.objects.get(name=message)
-            skillset = skillSet.objects.filter(skill_id=skillName.id, character_id=character.id)
+            skillName = await Skill.objects.aget(name=message)
+            skillset = await sync_to_async(list)(skillSet.objects.filter(skill_id=skillName.id, character_id=character.id))
             if skillset:
-                skillsetJson = json.loads(serialize('json', skillset))
-                skillsetData = skillsetJson[0]['fields']
-                return JsonResponse({"skill": skill, "skillSet": skillsetData})
+                result = load_serial(skillset)
+                return JsonResponse({"skill": skill, "skillSet": result})
             else:
-                return JsonResponse({"skill": skill})
+                return JsonResponse({"skill": skill, "skillSet": {}})
         elif weapon:
-            weaponJson = json.loads(serialize('json', weapon))
-            weaponBagData = weaponJson[0]['fields']
-            weapon_id = weaponBagData['weapon']
-            weaponModel = Weapon.objects.get(id=weapon_id)
+            result = await sync_to_async(load_serial)(weapon)
+            weapon_id = result[0]['weapon']
+            weaponModel = await Weapon.objects.aget(id=weapon_id)
             data = {
                 "weapon_name": weaponModel.name,
                 "weapon_desc": weaponModel.description,
             }
-            return JsonResponse({"weaponBag": weaponBagData, "data": data})
+            return JsonResponse({"weaponBag": result, "data": data})
         elif magic:
-            magicData = {
-                "name": magic.name,
-                "desc": magic.description,
-                "damage": magic.damage,
-                "healing": magic.healing
+            result = await sync_to_async(load_serial)(magic)
+            magic_id = result[0]['magic']
+            magicModel = await Magic.objects.aget(id=magic_id)
+            data = {
+                "magic_name": magicModel.name,
+                "magic_desc": magicModel.description,
             }
-            return JsonResponse({"magic": magicData})
+            return JsonResponse({"magic": result, "magicTome": data})
 
         else:
             return JsonResponse({"message": message})
@@ -919,15 +1016,14 @@ def trainingGrab(request, username):
     elif request.method == "POST":
         message = request.headers.get('X-Custom-Message')
         userName = request.headers.get('X-Custom-User')
-        user = CustomUser.objects.get(username=userName)
-        character = user.character
+        user, character = await get_user_character(userName)
         if message == "skill":
             data = json.loads(request.body.decode('utf-8'))
             message = data.get('message')
-            skill = Skill.objects.get(name=message)
-            result = addSkill(skill, character)
+            skill = await Skill.objects.aget(name=message)
+            result = await addSkill(skill, character)
             character.current_motivation = character.current_motivation - 1
-            character.save()
+            await sync_to_async(character.save)()
             if result == "Max Efficiency":
                 return JsonResponse({"message": "skill is maxed out"})
             else:
@@ -939,9 +1035,9 @@ def trainingGrab(request, username):
             data = json.loads(request.body.decode('utf-8'))
             name = data.get('name')
             type = data.get('trainType')
-            weapon = Weapon.objects.get(name=name)
-            weapon_bag = WeaponBag.objects.get(character_id=character.id, weapon_id=weapon.id)
-            result = practiceWeapon(weapon, weapon_bag, character, type)
+            weapon = await Weapon.objects.aget(name=name)
+            weapon_bag = await WeaponBag.objects.aget(character_id=character.id, weapon_id=weapon.id)
+            result = await practiceWeapon(weapon, weapon_bag, character, type)
             if result == 1:  # 0.25
                 message = "Failure is the stepping stones to success!"
             elif result == 2:  # 0.50
@@ -959,9 +1055,9 @@ def trainingGrab(request, username):
             data = json.loads(request.body.decode('utf-8'))
             name = data.get('name')
             type = data.get('trainType')
-            magic = Magic.objects.get(name=name)
-            magic_tome = magicTome.objects.get(character_id=character.id, magic_id=magic.id)
-            result = practiceMagic(magic, magic_tome, character, type)
+            magic = await Magic.objects.aget(name=name)
+            magic_tome = await magicTome.objects.aget(character_id=character.id, magic_id=magic.id)
+            result = await practiceMagic(magic, magic_tome, character, type)
             if result == 1:  # 0.25
                 message = "Failure is the stepping stones to success!"
             elif result == 2:  # 0.50
@@ -973,7 +1069,7 @@ def trainingGrab(request, username):
                 return JsonResponse({'message': "You died", 'redirect': reverse('deadView', kwargs={'username': userName})})
             return JsonResponse({"message": message, "currentMotivation": character.current_motivation,
                                  "currentHealth": character.current_health, "maxHealth": character.health,
-                                 "maxMotivation": character.motivation, 'efficiency': magic_tome.weapon_efficiency})
+                                 "maxMotivation": character.motivation, 'efficiency': magic_tome.spell_efficiency})
         else:
             return JsonResponse({'message': "POST"})
 

@@ -43,9 +43,7 @@
                     <select id="magic-select">
                       <option value="">Select a magic spell</option>
                       {% if magic %}
-                        {% for i in magic %}
-                        <option value="{{ i.name }}">{{ i.name }}</option>
-                        {% endfor %}
+                        <option value="{{ magic.spell_id }}">{{ magic.spell_name }}</option>
                       {% else %}
                         <option value="">No magic available</option>
                       {% endif %}

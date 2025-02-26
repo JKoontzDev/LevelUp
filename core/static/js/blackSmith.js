@@ -167,13 +167,21 @@ function forgeFunction() {
         const itemName = document.createElement('h3');
         itemName.textContent = "Items in bag";
         div.appendChild(itemName);
-        items.forEach(item => {
+        if (items) {
+            items.forEach(item => {
+                const itemQuantity = document.createElement('p');
+                itemQuantity.id = item.id
+                itemQuantity.textContent = `${item.name}: ${item.quantity}`;
+                itemQuantity.setAttribute('quantity', item.quantity);
+                div.appendChild(itemQuantity);
+            })
+        } else {
             const itemQuantity = document.createElement('p');
-            itemQuantity.id = item.id
-            itemQuantity.textContent = `${item.name}: ${item.quantity}`;
-            itemQuantity.setAttribute('quantity', item.quantity);
+            itemQuantity.textContent = `No Items`;
             div.appendChild(itemQuantity);
-        })
+        }
+
+
         itemGrid.appendChild(div);
         // above is used to add items panel
         // below is for armor
@@ -223,80 +231,92 @@ function repairFunction() {
     })
     .then(responseData => {
         const item = responseData.items;
-        item.forEach(item =>{
+        if (item.length !== 0) {
+            item.forEach(item =>{
+                const div = document.createElement('div');
+                div.id = `${item.id}${item.name}`;
+                div.className = 'item';
+
+                const itemName = document.createElement('h3');
+                itemName.textContent = item.name;
+                div.appendChild(itemName);
+
+                const itemDur = document.createElement('h5');
+                itemDur.textContent =`Max durability: ${item.max_durability}`;
+                div.appendChild(itemDur);
+
+                const itemCDur = document.createElement('h5');
+                itemCDur.textContent =`Current durability: ${item.current_durability}`;
+                div.appendChild(itemCDur);
+
+                const itemPrice = document.createElement('p');
+                itemPrice.textContent = `Repair cost: ${item.repair_cost} gold`;
+                div.appendChild(itemPrice);
+
+                const DBut = document.createElement('button');
+                DBut.textContent = `Repair now`;
+                DBut.id = `${item.name}`;
+                DBut.classList.add('DButton');
+                div.appendChild(DBut);
+
+                if (item.current_durability == item.max_durability) {
+                    DBut.disabled = true;
+                    DBut.classList.add('strike');
+                }
+
+                DBut.addEventListener('click', function () {
+                    data = {
+                        'name': item.name,
+                        'message': 'repair',
+                        'type': item.type,
+                        'repair_cost': item.repair_cost,
+                        'itemId': item.id
+                    }
+                    fetch(url, {
+                        method: 'Post',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            'X-Custom-Message': 'repair',
+                            'X-Custom-User': username,
+                        },
+                        body: JSON.stringify(data),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+                        return response.json(); // Parse JSON response
+                    })
+                    .then(responseData => {
+                        const itemDurability = responseData.data;
+                        const message = responseData.message;
+                        if (message === "Insufficient funds") {
+                            alert(`Insufficient funds to repair: ${item.name}`);
+                        } else {
+                            itemCDur.textContent =`Current durability: ${itemDurability.newDur}`;
+                            alert(`Thanks for your service!`);
+                            blackSmithText.textContent = getRandomMessage('upgradeEquipmentDialogue')
+                            if (itemDurability.newDur == itemDurability.maxDur) {
+                                DBut.disabled = true;
+                                DBut.classList.add('strike');
+                            }
+                        }
+                    })
+                })
+                itemGrid.appendChild(div);
+            })
+        } else {
             const div = document.createElement('div');
-            div.id = `${item.id}${item.name}`;
             div.className = 'item';
 
             const itemName = document.createElement('h3');
-            itemName.textContent = item.name;
+            itemName.textContent = "No Items";
             div.appendChild(itemName);
 
-            const itemDur = document.createElement('h5');
-            itemDur.textContent =`Max durability: ${item.max_durability}`;
-            div.appendChild(itemDur);
-
-            const itemCDur = document.createElement('h5');
-            itemCDur.textContent =`Current durability: ${item.current_durability}`;
-            div.appendChild(itemCDur);
-
-            const itemPrice = document.createElement('p');
-            itemPrice.textContent = `Repair cost: ${item.repair_cost} gold`;
-            div.appendChild(itemPrice);
-
-            const DBut = document.createElement('button');
-            DBut.textContent = `Repair now`;
-            DBut.id = `${item.name}`;
-            DBut.classList.add('DButton');
-            div.appendChild(DBut);
-
-            if (item.current_durability == item.max_durability) {
-                DBut.disabled = true;
-                DBut.classList.add('strike');
-            }
-
-            DBut.addEventListener('click', function () {
-                data = {
-                    'name': item.name,
-                    'message': 'repair',
-                    'type': item.type,
-                    'repair_cost': item.repair_cost,
-                    'itemId': item.id
-                }
-                fetch(url, {
-                    method: 'Post',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken,
-                        'X-Custom-Message': 'repair',
-                        'X-Custom-User': username,
-                    },
-                    body: JSON.stringify(data),
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok ' + response.statusText);
-                    }
-                    return response.json(); // Parse JSON response
-                })
-                .then(responseData => {
-                    const itemDurability = responseData.data;
-                    const message = responseData.message;
-                    if (message === "Insufficient funds") {
-                        alert(`Insufficient funds to repair: ${item.name}`);
-                    } else {
-                        itemCDur.textContent =`Current durability: ${itemDurability.newDur}`;
-                        alert(`Thanks for your service!`);
-                        blackSmithText.textContent = getRandomMessage('upgradeEquipmentDialogue')
-                        if (itemDurability.newDur == itemDurability.maxDur) {
-                            DBut.disabled = true;
-                            DBut.classList.add('strike');
-                        }
-                    }
-                })
-            })
             itemGrid.appendChild(div);
-        })
+
+        }
     })
 }
 
@@ -382,6 +402,16 @@ function smeltFunction() {
                     itemGrid.appendChild(div);
                 })
             }
+        } else {
+            const div = document.createElement('div');
+            div.className = 'item';
+
+            const itemName = document.createElement('h3');
+            itemName.textContent = "No ore in bag!";
+            div.appendChild(itemName);
+
+            itemGrid.appendChild(div);
+
         }
     })
 }
@@ -407,7 +437,6 @@ function upgradeFunction() {
     .then(responseData => {
         const item = responseData.items;
         const ingredients = responseData.ingredients;
-
         //bellow is to add ingredients
 
         const flexDiv = document.createElement("div");
@@ -421,49 +450,74 @@ function upgradeFunction() {
         const itemName = document.createElement('h3');
         itemName.textContent = "Items in bag";
         div.appendChild(itemName);
-
-        ingredients.forEach(item => {
+        if (ingredients.length > 0){
+            ingredients.forEach(item => {
+                const itemQuantity = document.createElement('p');
+                itemQuantity.id = item.id
+                itemQuantity.textContent = `${item.name}: ${item.quantity}`;
+                itemQuantity.setAttribute('quantity', item.quantity);
+                div.appendChild(itemQuantity);
+            })
+        } else {
             const itemQuantity = document.createElement('p');
-            itemQuantity.id = item.id
-            itemQuantity.textContent = `${item.name}: ${item.quantity}`;
-            itemQuantity.setAttribute('quantity', item.quantity);
+            itemQuantity.textContent = "No Ingredients in bag";
             div.appendChild(itemQuantity);
-        })
+
+        }
+
         itemGrid.appendChild(flexDiv);
         //above is to add ingredients
         //bellow is to add items
+        if (item.length > 0) {
+              item.forEach((item) => {
+                  const flexDiv = document.createElement("div");
+                  flexDiv.className = "flexDiv";
 
-        item.forEach((item) => {
-              const flexDiv = document.createElement("div");
-              flexDiv.className = "flexDiv";
+                  const div = document.createElement("div");
+                  div.id = `${item.id}${item.name}`;
+                  div.className = "item";
+                  flexDiv.appendChild(div);
 
-              const div = document.createElement("div");
-              div.id = `${item.id}${item.name}`;
-              div.className = "item";
-              flexDiv.appendChild(div);
+                  const itemImage = document.createElement("img");
+                  itemImage.src = item.image || "default-item.png"; // Add item.image for dynamic icons
+                  itemImage.alt = `${item.name}`;
+                  itemImage.className = "item-icon";
+                  div.appendChild(itemImage);
 
-              const itemImage = document.createElement("img");
-              itemImage.src = item.image || "default-item.png"; // Add item.image for dynamic icons
-              itemImage.alt = `${item.name}`;
-              itemImage.className = "item-icon";
-              div.appendChild(itemImage);
+                  const itemName = document.createElement("h3");
+                  itemName.textContent = item.name;
+                  itemName.className = "item-name";
+                  div.appendChild(itemName);
 
-              const itemName = document.createElement("h3");
-              itemName.textContent = item.name;
-              itemName.className = "item-name";
-              div.appendChild(itemName);
+                  const DBut = document.createElement("button");
+                  DBut.textContent = `Upgrade Now`;
+                  DBut.id = `${item.name}`;
+                  DBut.classList.add("DButton");
+                  DBut.title = `Upgrade ${item.name} to the next level!`;
+                  div.appendChild(DBut);
 
-              const DBut = document.createElement("button");
-              DBut.textContent = `Upgrade Now`;
-              DBut.id = `${item.name}`;
-              DBut.classList.add("DButton");
-              DBut.title = `Upgrade ${item.name} to the next level!`;
-              div.appendChild(DBut);
+                  DBut.addEventListener("click", () => showUpgradePanel(item));
 
-              DBut.addEventListener("click", () => showUpgradePanel(item));
+                  itemGrid.appendChild(flexDiv);
+            })
+        } else {
 
-              itemGrid.appendChild(flexDiv);
-        })
+            const flexDiv = document.createElement("div");
+            flexDiv.className = "flexDiv";
+
+            const div = document.createElement("div");
+            div.className = "item";
+            flexDiv.appendChild(div);
+
+            const itemName = document.createElement("h3");
+            itemName.textContent = "No Items in bag";
+            itemName.className = "item-name";
+            div.appendChild(itemName);
+
+            itemGrid.appendChild(flexDiv);
+
+        }
+
     })
 }
 
