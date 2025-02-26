@@ -64,7 +64,7 @@ function addSkillDiv(skill, skillSet) {
 
         // Damage modifier
         const damage = document.createElement('p');
-        damage.textContent = `+${skillSet && skillSet.damage_modifier ? skillSet.damage_modifier : skill.damage} damage modifier`;
+        damage.textContent = `+${skillSet[0] && skillSet[0].damage_modifier ? skillSet[0].damage_modifier : skill.damage} damage modifier`;
         damage.className = 'skill-damage';
         div.appendChild(damage);
 
@@ -91,7 +91,7 @@ function addSkillDiv(skill, skillSet) {
         const efficiency = document.createElement('div');
         efficiency.className = 'skill-level';
         const efficiencyText = document.createElement('p');
-        efficiencyText.textContent = `Efficiency: ${skillSet && skillSet.efficiency ? skillSet.efficiency : 0}`;
+        efficiencyText.textContent = `Efficiency: ${skillSet[0] && skillSet[0].efficiency ? skillSet[0].efficiency : 0}`;
         efficiencyText.className = 'level-text';
         efficiencyText.id = 'efficiencyText';
 
@@ -102,7 +102,7 @@ function addSkillDiv(skill, skillSet) {
         eprogressBarContainer.className = 'e-progress-bar-container';
         const eprogressBar = document.createElement('div');
         eprogressBar.className = 'e-progress-bar';
-        eprogressBar.style.width = `${(skillSet && skillSet.efficiency ? skillSet.efficiency : 0) / 10 * 100}%`;
+        eprogressBar.style.width = `${(skillSet[0] && skillSet[0].efficiency ? skillSet[0].efficiency : 0) / 10 * 100}%`;
         eprogressBarContainer.appendChild(eprogressBar);
         efficiency.appendChild(eprogressBarContainer);
 
@@ -359,13 +359,13 @@ function addWeaponDiv(weaponBag, data) {
 
         // Damage modifier
         const damage = document.createElement('p');
-        damage.textContent = `Current Damage: ${weaponBag.upgraded_damage}`;
+        damage.textContent = `Current Damage: ${weaponBag[0].upgraded_damage}`;
         damage.className = 'skill-damage';
         div.appendChild(damage);
 
         // efficiency modifier
         const efficiency = document.createElement('p');
-        efficiency.textContent = `Current efficiency: ${weaponBag.weapon_efficiency}`;
+        efficiency.textContent = `Current efficiency: ${weaponBag[0].weapon_efficiency}`;
         efficiency.id = 'itemEfficiency';
         efficiency.className = 'skill-damage';
         div.appendChild(efficiency);
@@ -427,14 +427,14 @@ function addWeaponDiv(weaponBag, data) {
 }
 
 
-function addMagicDiv(magic) {
+function addMagicDiv(magic, magicTome) {
         const div = document.createElement('div');
-        div.id = `${magic.name}`;
+        div.id = `${magicTome.magic_name}`;
         div.className = 'div-details';
 
         // Skill name with icon
         const name = document.createElement('h3');
-        name.textContent = `${magic.name}`;
+        name.textContent = `${magicTome.magic_name}`;
         name.className = 'skill-name';
         const skillIcon = document.createElement('span');
         skillIcon.className = 'skill-icon';
@@ -444,19 +444,19 @@ function addMagicDiv(magic) {
 
         // Skill description
         const description = document.createElement('p');
-        description.textContent = `${magic.desc}`;
+        description.textContent = `${magicTome.magic_desc}`;
         description.className = 'skill-description';
         div.appendChild(description);
 
         // Damage modifier
         const damage = document.createElement('p');
-        damage.textContent = `Current Damage: ${magic.damage}`;
+        damage.textContent = `Current Damage: ${magic[0].upgraded_damage}`;
         damage.className = 'skill-damage';
         div.appendChild(damage);
 
         // efficiency modifier
         const efficiency = document.createElement('p');
-        efficiency.textContent = `Current efficiency:`;
+        efficiency.textContent = `Current efficiency: ${magic[0].spell_efficiency}`;
         efficiency.id = 'itemEfficiency';
         efficiency.className = 'skill-damage';
         div.appendChild(efficiency);
@@ -703,7 +703,8 @@ buttons.forEach(button => {
                 addWeaponDiv(weaponBag, info)
             } else if (responseData.magic){
                 const magic = responseData.magic;
-                addMagicDiv(magic)
+                const info = responseData.magicTome
+                addMagicDiv(magic, info)
             }
 
 

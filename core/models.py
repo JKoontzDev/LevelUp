@@ -68,9 +68,6 @@ class equipablesIngredients(models.Model):
     weapon = models.ForeignKey('Weapon', on_delete=models.CASCADE, null=True, blank=True)
     armor = models.ForeignKey('Armor', on_delete=models.CASCADE, null=True, blank=True)
 
-    def __str__(self):
-        return f"{self.quantity} x {self.item.name} )"
-
 
 class Weapon(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
@@ -86,7 +83,6 @@ class Weapon(models.Model):
 
     def __str__(self):
         return f"Weapon: {self.name}"
-
 
 
 class Magic(models.Model):
@@ -157,8 +153,8 @@ class BackpackItem(models.Model):
     item = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
 
-    def __str__(self):
-        return f"{self.quantity} x {self.item.name} (owned by {self.character.character_name})"
+    #def __str__(self):
+        #return f"{self.quantity} x {self.item.name} (owned by {self.character.character_name})"
 
 
 class magicTome(models.Model):
@@ -212,7 +208,7 @@ class Character(models.Model):
         blank=True
     )
     current_equip_items = models.ManyToManyField(Item, related_name='equipped_items', blank=True)
-    level = models.IntegerField(default=1)  # Add your custom field
+    level = models.IntegerField(default=1)
     rank = models.ForeignKey(Rank, on_delete=models.CASCADE, related_name='character', null=True,
                              blank=True)  # ForeignKey to Rank
     exp = models.IntegerField(default=0)
