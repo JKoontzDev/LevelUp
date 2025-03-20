@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        {% load static %}
+
+    <title>500 - Arcane Catastrophe</title>
+    <link rel="stylesheet" href="{% static 'css/500.css' %}">
+
+</head>
+<body>
+    <div class="container">
+        <h1>500</h1>
+        <p>By the Seven Gods, an Arcane Catastrophe!</p>
+        <p>The mystic energies have destabilized our sacred archives.</p>
+        <a href="{% url 'dashboard' username=user.username %}" class="btn">Cast Return Spell</a>
+    </div>
+</body>
+</html>

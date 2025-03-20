@@ -51,10 +51,10 @@
     <section class="health-tracker">
         <h3>Health & Motivation</h3>
         <p>HP: {{ character.current_health }}/{{ character.health }}</p>
-        <div class="health-bar"><div id="fillHealth" style="width: {{ calcHealth }}%;"></div></div>
+        <div title="{{ calcHealth }}%" class="health-bar hover-box"><div id="fillHealth" style="width: {{ calcHealth }}%;"></div></div>
 
         <p>Motivation: {{ character.current_motivation }}/{{ character.motivation }}</p>
-        <div class="motivation-bar"><div id="fillMotivation" style="width: {{ calcMotivation }}%"></div></div>
+        <div title="{{ calcMotivation }}%" class="motivation-bar hover-box"><div id="fillMotivation" style="width: {{ calcMotivation }}%"></div></div>
 
     </section>
 
@@ -67,6 +67,12 @@
     <section class="message-board">
         <h3>Message Board</h3>
         <p id="messages">No new messages</p>
+    </section>
+
+
+    <section class="settings">
+        <h3>Settings</h3>
+        <a href="{% url 'settings' username=user.username %}"><button class="settingsButton">Go to settings</button></a>
     </section>
 
 

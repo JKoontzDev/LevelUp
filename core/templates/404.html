@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        {% load static %}
+
+    <title>404 - Realm of the Lost</title>
+    <link rel="stylesheet" href="{% static 'css/404.css' %}">
+
+</head>
+<body>
+    <div class="container">
+        <div class="mist"></div>
+        <h1>404</h1>
+        <p>By the ancient runes, thou hast wandered into the Realm of the Lost!</p>
+        <p>The scroll thou seekest hath vanished into the ethereal mists.</p>
+        <a href="{% url 'dashboard' username=user.username %}" class="btn">Return to the Kingdom</a>
+        {% if request %}
+            <p style="font-size: 1rem; opacity: 0.7;">Last known path: {{ request.path }}</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>

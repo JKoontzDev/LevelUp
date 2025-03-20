@@ -29,10 +29,10 @@
         <div class="background-animation"></div>
         <header class="hero">
             <div class="profile-card">
-                <a href="{% url 'characterPage' username=user.username %}"><img src="{% static 'img/bleach-ichigo-pfp-8.jpg' %}" alt="User Avatar"></a>
+                <a href="{% url 'characterPage' username=user.username %}"><img src="{{user.profile_picture.url}}" alt="User Avatar"></a>
                 <div class="info">
-                    <div class="username">{{ character.rank }}</div>
-                    <div class="xp-bar"><div id="fillExp" style="width: {{ character.exp }}%;"></div></div>
+                    <div  class="username">{{ character.rank }}</div>
+                    <div title="{{ character.exp }}%" class="xp-bar hover-box"><div id="fillExp" style="width: {{ character.exp }}%;"></div></div>
                 </div>
             </div>
             <div>

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Settings
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/settings.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+
+
+    <div class="MainDiv">
+        <h2>User preferences</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="gridMain">
+                <div class="gridFlex">
+                    <h2>Change Profile Picture</h2>
+                    {{ form.profile_pic }}
+                </div>
+                <div class="gridFlex">
+                    <h2>Daily number of quests</h2>
+                    {{ form.number_of_quests }}
+                </div>
+            </div>
+            <button class="submitButton" type="submit">Upload</button>
+        </form>
+    </div>
+
+
+
+
+{% endblock %}

@@ -40,6 +40,9 @@ class loginForm(forms.Form):
     password = forms.CharField(max_length=30, required=True, widget=forms.PasswordInput(attrs={'placeholder': 'Enter your password'}))
 
 
+class settingsForm(forms.Form):
+    number_of_quests = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'placeholder': 'Enter your goal'}))
+    profile_pic = forms.ImageField(required=False)
 
 
 

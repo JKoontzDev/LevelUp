@@ -12,6 +12,8 @@ def reset_quests_at_midnight():
         return
     CustomUser.objects.all().update(number_of_quests=F('base_number_of_quests'))
     CustomUser.objects.all().update(target_num_quests_inc=0)
+    CustomUser.objects.all().update(gotten_quests=False)
+
     print("Quests reset successfully.")
     print("Testing")
 

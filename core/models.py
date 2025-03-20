@@ -2,6 +2,27 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 import random
+from django.core.exceptions import ValidationError
+from django.utils.text import get_valid_filename
+from PIL import Image
+
+
+
+def user_directory_path(instance, filename):
+    return f"profile_pics/{instance.id}/{filename}"
+
+
+def validate_file_type(file):
+    allowed_types = ['image/jpeg', 'image/png', 'application/pdf']
+    content_type = file.content_type
+    if content_type not in allowed_types:
+        raise ValidationError("Unsupported file type.")
+
+
+def validate_file_size(file):
+    max_size = 5 * 1024 * 1024
+    if file.size > max_size:
+        raise ValidationError("File too large. Size should not exceed 5 MiB.")
 
 
 class Rank(models.Model):
@@ -267,8 +288,7 @@ class CustomUser(AbstractUser):
     target_num_quests = models.IntegerField(default=2)  # you can have as many quests as you want but this amount is how
     # many you need to complete the day ^
     target_num_quests_inc = models.IntegerField(default=0)  # used to check if target num quests is met
-    completed_quests = models.IntegerField(
-        default=0)  # increments up 1 when a quest is finished used for the percent_weekly_completed
+    completed_quests = models.IntegerField(default=0)  # increments up 1 when a quest is finished used for the percent_weekly_completed
     base_number_of_quests = models.IntegerField(default=4)  # set number from setting
     weekly_quests_count = models.IntegerField(default=0)  # base_number_of_quests * 7 used for percentage on dashboard
     percent_weekly_completed = models.FloatField(default=0.00)  # the percentage of completed quests per week!
@@ -276,6 +296,7 @@ class CustomUser(AbstractUser):
     character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name='character', null=True,
                                   blank=True)
     gotten_quests = models.BooleanField(default=False)  # used to check if they have gotten new daily quests
+    profile_picture = models.ImageField(upload_to=user_directory_path, default="default_avatar.png", validators=[validate_file_type, validate_file_size])
 
     def __str__(self):
         return self.username
@@ -285,6 +306,13 @@ class CustomUser(AbstractUser):
             self.character.backpack.through.objects.filter(character=self.character).delete()
             self.character.delete()
         super().delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        img = Image.open(self.profile_picture.path)
+        if img.height > 300 or img.width > 300:
+            img.thumbnail((300, 300))
+            img.save(self.profile_picture.path)
 
 
 class dailyQuest(models.Model):

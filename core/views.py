@@ -12,6 +12,13 @@ import json
 import random
 from django.db.models import F
 from datetime import datetime
+import pillow_heif
+from PIL import Image
+import os
+from LevelUp.settings import MEDIA_ROOT
+import httpx
+import asyncio
+
 
 
 @sync_to_async(thread_sensitive=True)
@@ -29,11 +36,14 @@ def get_user_character(username):
 def finish_task(index, username):
     user = CustomUser.objects.get(username=username)
     character = user.character
-
+    #if character.can_advance_rank():
+    #    character.advance_rank()
+    #    character.save()
     # start daily dungeon raid and level up/ gain exp
-    messageBoard = ''
+    messageBoard = ""
     user.target_num_quests_inc = user.target_num_quests_inc + 1
     if user.target_num_quests_inc == user.target_num_quests:
+        user.completed_days += 1
         character.exp = character.exp + 25
         if character.exp == 100:
             character.exp = 0
@@ -470,6 +480,25 @@ def forgeableFun(armors, weapons, backpack):
 
 
 
+async def get_npc_response(npc_name, player_input):
+    model = "mistral"
+    prompt = f"You are {npc_name}, an NPC in an RPG game. The player asks: '{player_input}'. Respond like a wise NPC."
+
+    async with httpx.AsyncClient() as client:
+        async with client.stream(
+            "POST",
+            "http://localhost:11434/api/generate",
+            json={"model": model, "prompt": prompt}
+        ) as response:
+            npc_reply = ""
+            async for line in response.aiter_lines():
+                try:
+                    data = httpx.Response(200, content=line).json()
+                    npc_reply += data.get("response", "")
+                except Exception:
+                    continue
+
+            return npc_reply.strip() if npc_reply else "NPC stays silent..."
 
 
 # routes
@@ -491,6 +520,7 @@ async def loginPage(request):
             if user is not None:
                 await sync_to_async(login)(request, user)
                 return redirect('dashboard', username=username)
+
         if is_valid_reg:
             await sync_to_async(RegForm.save)()
             username = RegForm.cleaned_data['username']
@@ -1075,6 +1105,80 @@ async def trainingGrab(request, username):
 
 
 
+@login_required
+async def guildHall(request, username):
+    user, character = await get_user_character(username)
+    return render(request, "guildHall.html", {'user': user, "character": character})
+
+
+
+@login_required
+async def npc_chat_api(request):
+    npc_name = request.GET.get("npc", "Sid")
+    player_message = request.GET.get("message", "Hello")
+    response = await get_npc_response(npc_name, player_message)
+    return JsonResponse({"response": response})
+
+
+
+@login_required
+async def settings(request, username):
+    user, character = await get_user_character(username)
+    form = settingsForm(request.POST, request.FILES)
+    if request.method == "POST":
+        number_of_questss = request.POST.get('number_of_quests')
+        profile_pic = request.FILES.get('profile_pic')
+
+        print("accept post")
+
+        if number_of_questss:
+            is_valid_settings = await sync_to_async(form.is_valid)()
+
+            if is_valid_settings:
+                user.base_number_of_quests = number_of_questss
+                user.number_of_quests = 0
+                user.weekly_quests_count = (int(number_of_questss) * 7)
+                user.target_num_quests = (int(number_of_questss) / 2)
+                user.target_num_quests_inc = 0
+                user.percent_weekly_completed = 0.0
+                user.target_num_quests_inc = 0
+                await sync_to_async(user.save)()
+                return redirect("dashboard", username=username)
+            else:
+                return redirect('settings', username=username)
+        if profile_pic:
+            file = profile_pic.name
+            jpeg_filename = file.replace(".heic", ".jpeg").replace(".HEIC", ".jpeg")
+            output_path = os.path.join(MEDIA_ROOT, f"profile_pics/{user.id}", jpeg_filename)
+            print("FILES RECEIVED:", request.FILES)
+            if file.lower().endswith(".heic"):
+                print("YES")
+                heif_image = pillow_heif.read_heif(profile_pic)
+                image = Image.frombytes(
+                    heif_image.mode,
+                    heif_image.size,
+                    heif_image.data,
+                    "raw",
+                    heif_image.mode,
+                    heif_image.stride,
+                )
+                image.save(output_path, "JPEG", quality=85)
+                relative_path = os.path.join(f"profile_pics/{user.id}", jpeg_filename)
+                user.profile_picture = relative_path
+            else:
+                user.profile_picture = profile_pic
+
+            await sync_to_async(user.save)()
+            return redirect("dashboard", username=username)
+
+
+
+
+
+    #heif_file = pillow_heif.read_heif("/Users/sadface/Desktop/LevelUp/core/static/img/IMG_1972.HEIC")
+    #image = Image.frombytes(heif_file.mode, heif_file.size, heif_file.data)
+    #image.show()
+    return render(request, "settings.html", {'user': user, 'character': character, "form": form})
 
 
 
@@ -1082,8 +1186,14 @@ async def trainingGrab(request, username):
 
 
 
+def handler404(request):
+    context = {
+        'request': request,
+    }
+    return render(request, '404.html', context, status=404)
 
-
+def server_error_view(request):
+    return render(request, '500.html', status=500)
 
 
 

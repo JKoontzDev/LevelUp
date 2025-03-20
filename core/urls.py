@@ -1,5 +1,9 @@
 from django.urls import path
 from . import views
+from django.conf.urls.static import static
+
+from django.conf import settings
+
 
 urlpatterns = [
     path('home/', views.homePage, name='home'),
@@ -23,12 +27,18 @@ urlpatterns = [
     # Ironstead training
     path('dashboard/<str:username>/ironstead/training/', views.trainingView, name='trainingView'),
     path('dashboard/<str:username>/ironstead/training/grab', views.trainingGrab, name='trainingGrab'),
-
-
-
-
+    # settings
+    path('dashboard/<str:username>/settings/', views.settings, name='settings'),
 
     #dead screen
     path('dead/<str:username>/', views.deadView, name='deadView'),
-
+    path('404/', views.handler404, name='handler404'),  # remove in production
+    path('500/', views.server_error_view, name='handler500'),  # remove in production
+    path('dashboard/<str:username>/ironstead/guild/hall', views.guildHall, name='guild')
 ]
+handler404 = 'core.views.handler404'
+handler500 = 'core.views.server_error_view'
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

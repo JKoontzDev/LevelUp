@@ -84,7 +84,7 @@ body {
 }
 .health-bar {
      margin-top: 5px;
-     background: #1a1ae;
+     background: #1a1a2e;
      border-radius: 10px;
      height: 10px;
      overflow: hidden;
@@ -97,6 +97,20 @@ body {
      background: linear-gradient(to right, #00f260, #0575e6);
 }
 
+.settingsButton{
+    height: 6vh;
+    width: auto;
+    color: white;
+    cursor: pointer;
+    background-color: rgb(22, 33, 62);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    border: 1px solid #00b4d8;
+    transition: 3s;
+}
+.settingsButton:hover{
+    transform: scale(1.1);
+}
 
 
 

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Guild Hall
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/guild.css' %}">
+
+  
+  <div class="container1">
+    <div>
+      <section class="quest-board">
+        <h2>Quest Board</h2>
+        <div class="tabs">
+          <div class="tab active" data-type="kill">Kill</div>
+          <div class="tab" data-type="capture">Capture</div>
+          <div class="tab" data-type="adventure">Adventure</div>
+          <div class="tab" data-type="other">Other</div>
+        </div>
+        <ul class="quest-list" id="questList">
+          <!-- Example quest items (to be generated dynamically) -->
+          <li data-type="kill">
+            <span>Easy Goblin Hunt (Kill) - Difficulty: Easy</span>
+            <button onclick="startQuest('Easy Goblin Hunt')">Start Quest</button>
+          </li>
+          <li data-type="adventure">
+            <span>Forest Exploration (Adventure) - Difficulty: Medium</span>
+            <button onclick="startQuest('Forest Exploration')">Start Quest</button>
+          </li>
+          <li data-type="capture">
+            <span>Bandit Capture (Capture) - Difficulty: Hard</span>
+            <button onclick="startQuest('Bandit Capture')">Start Quest</button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Equipment Workshop Section -->
+      <section class="shop">
+        <h2>Guild shop</h2>
+        <p>Craft, repair, and upgrade your gear before taking on dangerous quests.</p>
+        <button onclick="openShop()">Open Shop</button>
+        <!-- This button can trigger modal or navigate to a workshop page -->
+      </section>
+    </div>
+    
+    <aside class="guild-extra">
+      <section class="bulletin">
+        <h2>Bulletin Board</h2>
+        <ul>
+          <li>Guild meeting at 8 PM.</li>
+          <li>New equipment blueprints available!</li>
+          <li>Upcoming raid on the Dark Fortress.</li>
+        </ul>
+      </section>
+      
+      <!-- Guild Member Roster & Rankings -->
+      <section class="roster">
+        <h2>Member Roster</h2>
+        <ul>
+          <li>ArcherAce - Level 15 - Top Contributor</li>
+          <li>BladeMaster - Level 18</li>
+          <li>SorcerySage - Level 17</li>
+        </ul>
+      </section>
+      
+      <!-- Guild Tavern / Chat -->
+      <section class="chat">
+        <h2>Guild Tavern Chat</h2>
+        <div class="chat-area" id="chatArea">
+          <!-- Chat messages will appear here -->
+          <p><strong>ArcherAce:</strong> Ready for tonight's raid?</p>
+          <p><strong>BladeMaster:</strong> Need better gear before I jump in!</p>
+        </div>
+        <input type="text" class="chat-input" placeholder="Type a message..." onkeypress="handleChat(event)">
+      </section>
+    </aside>
+  </div>
+    <script src="{% static 'js/guild.js' %}"></script>
+
+{% endblock %}
