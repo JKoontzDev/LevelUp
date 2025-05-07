@@ -1,23 +1,25 @@
 from django.shortcuts import render, redirect
-from django.urls import reverse
+#from django.urls import reverse
+import requests
 from .forms import *
-from django.contrib.auth.forms import UserCreationForm
+#from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
+from django.urls import reverse
 from asgiref.sync import sync_to_async
 from core.models import *
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse
 import json
 import random
-from django.db.models import F
-from datetime import datetime
+#from django.db.models import F
+#from datetime import datetime
 import pillow_heif
 from PIL import Image
 import os
 from LevelUp.settings import MEDIA_ROOT
 import httpx
-import asyncio
+#import asyncio
 
 
 
@@ -481,24 +483,30 @@ def forgeableFun(armors, weapons, backpack):
 
 
 async def get_npc_response(npc_name, player_input):
-    model = "mistral"
-    prompt = f"You are {npc_name}, an NPC in an RPG game. The player asks: '{player_input}'. Respond like a wise NPC."
-
-    async with httpx.AsyncClient() as client:
-        async with client.stream(
-            "POST",
-            "http://localhost:11434/api/generate",
-            json={"model": model, "prompt": prompt}
-        ) as response:
+    model = "phi3"
+    npc = await sync_to_async(NPCS.objects.get)(name=npc_name)
+    prompt = await npc.generate_prompt(player_input)
+    print(prompt)
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(15.0)) as client:
+            response = await client.post(
+                "http://localhost:11434/api/generate",
+                json={"model": model, "prompt": prompt}
+            )
+            response.raise_for_status()
             npc_reply = ""
-            async for line in response.aiter_lines():
-                try:
-                    data = httpx.Response(200, content=line).json()
-                    npc_reply += data.get("response", "")
-                except Exception:
-                    continue
-
+            for line in response.text.splitlines():
+                if line:
+                    try:
+                        data = json.loads(line)
+                        npc_reply += data.get("response", "")
+                    except json.JSONDecodeError:
+                        continue
             return npc_reply.strip() if npc_reply else "NPC stays silent..."
+    except httpx.ReadTimeout:
+        return f"{npc_name} is too busy to respond right now."
+    except httpx.HTTPError as e:
+        return f"Error talking to {npc_name}"
 
 
 # routes
@@ -509,41 +517,54 @@ def homePage(request):
 
 async def loginPage(request):
     if request.method == "POST":
-        form = loginForm(data=request.POST or None)
-        RegForm = CustomUserCreationForm(data=request.POST or None)
-        is_valid_reg = await sync_to_async(RegForm.is_valid)()
-        is_valid_login = await sync_to_async(form.is_valid)()
-        if is_valid_login:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-            user = await sync_to_async(authenticate)(request, username=username, password=password)
-            if user is not None:
-                await sync_to_async(login)(request, user)
-                return redirect('dashboard', username=username)
+        if 'login-submit' in request.POST:
+            login_form = loginForm(request.POST)
+            reg_form = CustomUserCreationForm()
+            valid = await sync_to_async(login_form.is_valid)()
+            if valid:
+                username = login_form.cleaned_data['username']
+                password = login_form.cleaned_data['password']
+                user = await sync_to_async(authenticate)(request, username=username, password=password)
+                if user is not None:
+                    await sync_to_async(login)(request, user)
+                    return redirect('dashboard', username=username)
+                else:
+                    login_form.add_error(None, "Invalid username or password.")
+                return render(request, "login.html", {'form': login_form, 'reg': reg_form})
 
-        if is_valid_reg:
-            await sync_to_async(RegForm.save)()
-            username = RegForm.cleaned_data['username']
-            password = RegForm.cleaned_data['password1']
-            user = await sync_to_async(authenticate)(request, username=username, password=password)
-            if user is not None:
-                await sync_to_async(login)(request, user)
-                rank = await Rank.objects.aget(name="Weak")
-                user1 = await CustomUser.objects.aget(username=username)
-                new_character = await Character.objects.acreate(character_name=username)
-                character = await Character.objects.aget(character_name=username)
-                character.rank = rank
-                user1.character = new_character
-                await sync_to_async(user1.save)()
-                await sync_to_async(character.save)()
-                return redirect('dashboard', username=username)
-        else:
-            #print(RegForm.errors)
-            return redirect('home')
+        elif 'register-submit' in request.POST:
+            reg_form = CustomUserCreationForm(request.POST)
+            login_form = loginForm()
+            valid = await sync_to_async(reg_form.is_valid)()
+            if valid:
+                print("asd")
+                username = reg_form.cleaned_data['username']
+                password = reg_form.cleaned_data['password1']
+                user = await sync_to_async(CustomUser.objects.create_user)(username=username, password=password)
+                check = await sync_to_async(authenticate)(request, username=username, password=password)
+                print(user)
+                if check is not None:
+                    await sync_to_async(login)(request, user)
+                    rank = await Rank.objects.aget(name="Weak")
+                    user1 = await CustomUser.objects.aget(username=username)
+                    print("New character")
+                    new_character = await Character.objects.acreate(character_name=username)
+                    character = await Character.objects.aget(character_name=username)
+                    character.rank = rank
+                    user1.character = new_character
+                    await sync_to_async(user1.save)()
+                    await sync_to_async(character.save)()
+                    return redirect('dashboard', username=username)
+            else:
+                reg_form.add_error(None, "Registration failed. Please check your inputs.")
+            return render(request, "login.html", {'form': login_form, 'reg': reg_form})
+
     else:
-        form = loginForm()
-        RegForm = CustomUserCreationForm()
-    return render(request, "login.html", {'form': form, 'reg': RegForm, 'errors': RegForm.errors})
+        context = {
+            'form': loginForm(),
+            'reg': CustomUserCreationForm(),
+        }
+    return render(request, "login.html", context)
 
 
 @login_required
@@ -554,6 +575,7 @@ def logoutPage(request):
 
 @login_required
 async def dashboardPage(requests, username):
+
     user, character = await get_user_character(username)
     if user.base_number_of_quests > 0:
         user.weekly_quests_count = user.base_number_of_quests * 7
@@ -585,46 +607,90 @@ async def dashboardPage(requests, username):
             return JsonResponse(
                 {"message": "Task completed successfully from quest details!", 'questDescription': questDescription},
                 status=200)
-    if requests.method == "GET":
-        if number_of_quests == 0:
+    if requests.method == "GET":  # First load as it draws a GET
+        if number_of_quests == 0:  # Grabs and sees if number_of_quests(daily quest) is 0
             user.gotten_quests = False
-            if character.current_motivation > 0:
-                calcMotivation = (character.current_motivation / character.motivation * 100)
+            calcMotivation = (character.current_motivation / character.motivation * 100) if character.motivation else 0
+            #  checks if health is 0, if is then user died.
             if character.current_health > 0:
                 calcHealth = (character.current_health / character.health * 100)
-            return render(requests, "dashboard.html", {'user': user, "items": last_four_items, "character": character,
-                                                       "calcMotivation": calcMotivation, "calcHealth": calcHealth})
-        else:
-            if user.gotten_quests:
-                dquest = await sync_to_async(list)(character.quests.all())
-                # print(character.current_motivation)
-                if character.current_motivation > 0:
-                    calcMotivation = (character.current_motivation / character.motivation * 100)
-                else:
-                    calcMotivation = 0
-                if character.current_health > 0:
-                    calcHealth = (character.current_health / character.health * 100)
-                    # print(calcHealth)
-                else:
-                    calcHealth = 0
+            else:
+                return redirect('deadView')
+            #  grab guild quests for timer.
+            try:
+                guildQuest = await characterGuildQuests.objects.aget(character=character)
+                questId = await sync_to_async(lambda: guildQuest.quest.id)()
+                guildQuestInfo = await questBoard.objects.aget(id=questId)
+                guildQuestTime = f"You have {guildQuest.time_remaining()} left for your quest."
 
+                if guildQuest.is_finished():
+                    questDone = True
+                else:
+                    questDone = False
+            except characterGuildQuests.DoesNotExist:
+                guildQuestInfo = False
+                guildQuestTime = False
+                questDone = True
+
+            return render(requests, "dashboard.html", {'user': user, "items": last_four_items, "character": character,
+                                                       "calcMotivation": calcMotivation, "calcHealth": calcHealth,
+                                                       "guildQuestInfo": guildQuestInfo, "guildQuestTime": guildQuestTime,
+                                                       "questDone": questDone})
+        else:  # number_of_quests > 0
+            if user.gotten_quests: # have they gotten quests?
+                dquest = await sync_to_async(list)(character.quests.all())
+                calcMotivation = (character.current_motivation / character.motivation * 100) if character.motivation else 0
+                calcHealth = (character.current_health / character.health * 100) if character.health else 0
+                # get guild quests
+                try:
+                    guildQuest = await characterGuildQuests.objects.aget(character=character)
+                    questId = await sync_to_async(lambda: guildQuest.quest.id)()
+                    guildQuestInfo = await questBoard.objects.aget(id=questId)
+                    guildQuestTime = f"You have {guildQuest.time_remaining()} left for your quest."
+                    if guildQuest.is_finished():
+                        questDone = True
+                    else:
+                        questDone = False
+                except characterGuildQuests.DoesNotExist:
+                    guildQuestInfo = False
+                    guildQuestTime = False
+                    questDone = True
                 return render(requests, "dashboard.html",
                               {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests, "items": last_four_items,
-                               "character": character, "calcMotivation": calcMotivation, "calcHealth": calcHealth})
-            else:
+                               "character": character, "calcMotivation": calcMotivation, "calcHealth": calcHealth,
+                               "guildQuestInfo": guildQuestInfo, "guildQuestTime": guildQuestTime, "questDone": questDone})
+            else:  # Get new quests
                 await sync_to_async(character.quests.clear)()
                 user.gotten_quests = True
                 await sync_to_async(user.save)()
                 dquest = await get_random_quests(number_of_quests, username)
-                if character.current_motivation > 0:
-                    calcMotivation = (character.motivation / character.current_motivation)
+                calcMotivation = (character.current_motivation / character.motivation * 100) if character.motivation else 0
+                #  checks if health is 0, if is then user died.
                 if character.current_health > 0:
                     calcHealth = (character.health / character.current_health)
-                    # print(calcHealth)
+                else:
+                    return redirect('deadView')
+                # get guild quests
+                try:
+                    guildQuest = await characterGuildQuests.objects.aget(character=character)
+                    questId = await sync_to_async(lambda: guildQuest.quest.id)()
+                    guildQuestInfo = await questBoard.objects.aget(id=questId)
+                    guildQuestTime = f"You have {guildQuest.time_remaining()} left for your quest."
+                    if guildQuest.is_finished():
+                        questDone = True
+                    else:
+                        questDone = False
+                except characterGuildQuests.DoesNotExist:
+                    guildQuest = False
+                    guildQuestTime = False
+                    guildQuestInfo = False
+                    questDone = True
+
                 return render(requests, "dashboard.html", {'user': user, 'dQuest': dquest, "NumQuest": number_of_quests,
                                                            "items": last_four_items, "character": character,
-                                                           "calcMotivation": calcMotivation,
-                                                           "calcHealth": calcHealth})
+                                                           "calcMotivation": calcMotivation, "calcHealth": calcHealth,
+                                                           "guildQuestInfo": guildQuestInfo, "guildQuestTime": guildQuestTime,
+                                                           "questDone": questDone})
 
 
 @login_required
@@ -664,6 +730,10 @@ async def finish_task_route(request, username):
                     }
         print(send_out)
         return JsonResponse(send_out, status=200)
+
+
+
+
 
 
 @login_required
@@ -708,7 +778,7 @@ async def marketViewSendItems(request, username):
         data = json.loads(request.body.decode('utf-8'))
         user_name = data.get('username')
         item_name = data.get('itemName')
-        result = await sync_to_async(addItemToBag)(item_name, user_name)
+        result = await addItemToBag(item_name, user_name)
         if result == 1:
             send_out = {"message": "Task completed successfully!", "item": item_name}
             return JsonResponse(send_out, status=200)
@@ -1106,16 +1176,98 @@ async def trainingGrab(request, username):
 
 
 @login_required
-async def guildHall(request, username):
+async def ironsteadGuildHall(request, username):
     user, character = await get_user_character(username)
-    return render(request, "guildHall.html", {'user': user, "character": character})
+    character_quest = await sync_to_async(characterGuildQuests.objects.filter(character=character).first)()
+    locationNPC = await sync_to_async(list)(NPCS.objects.filter(location="Ironstead"))
+    bulletinBoardMessages = await sync_to_async(list)(bulletinBoardExtra.objects.filter(location="Ironstead"))
+
+    if user.gotten_guild_quests:
+        guildQuests = await sync_to_async(list)(character.guildQuests.all())
+    else:
+        await sync_to_async(character.guildQuests.clear)()
+        user.gotten_guild_quests = True
+        await sync_to_async(user.save)()
+        guildQuests = await sync_to_async(questBoard.objects.random_list)('Ironstead')
+        await sync_to_async(character.guildQuests.add)(*guildQuests)
+        await sync_to_async(character.save)()
+    if character_quest:
+        if character_quest.is_finished():
+            pass
+        else:
+            return redirect("dashboard", username=username)
+
+    return render(request, "guildHall.html", {'user': user, "character": character, "questBoard": guildQuests,
+                                              "npc": locationNPC, 'bbmessage': bulletinBoardMessages})
 
 
 
 @login_required
-async def npc_chat_api(request):
-    npc_name = request.GET.get("npc", "Sid")
-    player_message = request.GET.get("message", "Hello")
+async def guildHallAPI(request, username):
+    if request.method == "GET":
+        message = request.headers.get('X-Custom-Message')
+        userName = request.headers.get('X-Custom-User')
+        user, character = await get_user_character(userName)
+        quest_to_start = await sync_to_async(questBoard.objects.get)(questName=message)
+        active_quest = await sync_to_async(characterGuildQuests.objects.filter(character=character, is_completed=False).first)()
+        if active_quest:
+            print("U have a quest active")
+        else:
+            character_quest = await sync_to_async(characterGuildQuests.objects.create)(
+                character=character,
+                quest=quest_to_start,
+                duration_hours=quest_to_start.duration_hours,
+                is_completed=False
+            )
+    elif request.method == "POST":
+        message = request.headers.get('X-Custom-Message')
+        userName = request.headers.get('X-Custom-User')
+        user, character = await get_user_character(userName)
+        character_quest = await sync_to_async(characterGuildQuests.objects.filter(character=character).first)()
+        if message == "rewards":
+            if character_quest:
+                # print('You have a quest active.')
+                if await sync_to_async(character_quest.is_finished)():
+                    quest = await sync_to_async(lambda: character_quest.quest)()
+                    items = await sync_to_async(lambda: quest.get_drops())()
+                    namedItem = await named_drops(items)
+
+                    # remove quest from board
+
+                    await sync_to_async(character.guildQuests.remove)(quest.id)
+
+                    try:
+                        character_quest.is_completed = True
+                        await sync_to_async(character_quest.save)()
+                    except Exception as e:
+                        print(f"Save failed: {e}")
+                    result = await character_quest.quest_completed()
+                    return JsonResponse({"reward": namedItem, "questName": quest.questName})
+                else:
+                    timeLeft = await sync_to_async(character_quest.time_remaining)()
+                    return JsonResponse({"time": timeLeft})
+
+        elif message == "getReward":
+            userName = request.headers.get('X-Custom-User')
+            user, character = await get_user_character(userName)
+            reward = json.loads(request.body.decode('utf-8'))
+            await addItemToBag(reward, user)
+            return JsonResponse({"message": "Item added to bag"})
+
+
+    return JsonResponse({"one": 1})
+
+
+
+
+@login_required
+async def npc_chat_api(request, username):
+    npc_name = request.headers.get("X-Custom-Name")
+    player_message = request.headers.get("X-Custom-Message")
+    if npc_name == int:
+        npc_name = await sync_to_async(NPCS.objects.get)(id=npc_name)
+    #print(f"NPC name is {npc_name}")
+    #print(f"player message is {player_message}")
     response = await get_npc_response(npc_name, player_message)
     return JsonResponse({"response": response})
 
@@ -1128,20 +1280,18 @@ async def settings(request, username):
     if request.method == "POST":
         number_of_questss = request.POST.get('number_of_quests')
         profile_pic = request.FILES.get('profile_pic')
-
-        print("accept post")
-
+        bug = request.POST.get('problem_report')
         if number_of_questss:
             is_valid_settings = await sync_to_async(form.is_valid)()
-
             if is_valid_settings:
                 user.base_number_of_quests = number_of_questss
-                user.number_of_quests = 0
+                user.number_of_quests = user.base_number_of_quests
                 user.weekly_quests_count = (int(number_of_questss) * 7)
                 user.target_num_quests = (int(number_of_questss) / 2)
                 user.target_num_quests_inc = 0
                 user.percent_weekly_completed = 0.0
                 user.target_num_quests_inc = 0
+                user.gotten_quests = 0
                 await sync_to_async(user.save)()
                 return redirect("dashboard", username=username)
             else:
@@ -1170,6 +1320,14 @@ async def settings(request, username):
 
             await sync_to_async(user.save)()
             return redirect("dashboard", username=username)
+        if bug:
+            WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
+            message = {
+                "content": f"🔔 New bug reported in LevelUp: {bug}",
+                "username": "LevelUp Bot"
+            }
+
+            requests.post(WEBHOOK_URL, json=message)
 
 
 
@@ -1184,7 +1342,9 @@ async def settings(request, username):
 
 
 
-
+def bugs(request):
+    bugs = BugsModel.objects.all()
+    return render(request, 'bugs.html', {'bugs': bugs})
 
 def handler404(request):
     context = {

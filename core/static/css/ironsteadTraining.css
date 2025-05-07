@@ -3,7 +3,7 @@
     grid-template-columns: repeat(3, 1fr);
     justify-content: stretch;
     align-content: stretch;
-    width: 100vw;
+    width: 100%;
 
 }
 .character-stats{
@@ -13,6 +13,7 @@
 }
 .item-display{
     display: grid;
+    gap: 10px;
     grid-template-columns: auto auto;
 }
 
@@ -121,7 +122,6 @@
 .character-skills{
     display: flex;
     flex-direction: column;
-    margin-right: 2vw;
 }
 
 .right{
@@ -230,3 +230,91 @@
     background-color: red;
 }
 
+
+
+
+/* 2xl */
+@media (max-width: 1536px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* xl */
+@media (max-width: 1280px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+/* lg */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 768px;
+  }
+  .traingGrounds{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .item-display{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+ .namedStats{
+    text-align: center;
+ }
+ .skill-type{
+    font-size: 2.5vw;
+}
+
+
+}
+
+/* md */
+@media (max-width: 768px) {
+  .container {
+    max-width: 640px;
+  }
+  .traingGrounds{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .item-display{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+ .namedStats{
+    text-align: center;
+ }
+ .skill-type{
+    font-size: 2.5vw;
+}
+
+}
+
+/* sm
+@media (max-width: 640px) {
+  .container {
+    max-width: 475px;
+  }
+
+
+}
+
+
+@media (max-width: 475px) {
+  .container {
+    width: 100%;
+  }
+
+}
+
+*/

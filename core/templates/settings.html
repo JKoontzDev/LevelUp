@@ -14,7 +14,7 @@
     <div class="MainDiv">
         <h2>User preferences</h2>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" class="formMain" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="gridMain">
                 <div class="gridFlex">
@@ -25,8 +25,17 @@
                     <h2>Daily number of quests</h2>
                     {{ form.number_of_quests }}
                 </div>
+                <div class="gridFlex">
+                    <h2>Report a Bug</h2>
+                    <p class="thankText">Help me improve by reporting any issues you encounter. Before reporting, you might want
+                        to check our <a href="{% url 'bugs' %}" class="links">known issues page</a>.</p>
+                    {{ form.problem_report }}
+                    <div class="thankText">Thank you for reporting the bug. I will review your report and may contact you for more information.</div>
+
+                </div>
             </div>
-            <button class="submitButton" type="submit">Upload</button>
+            <button class="submitButton" type="submit">Submit</button>
+
         </form>
     </div>
 

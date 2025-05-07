@@ -112,3 +112,81 @@
         box-shadow: 0 0 10px #00F5FF, 0 0 30px #00F5FF, 0 0 10px #00F5FF;
     }
 }
+
+
+
+
+
+/* 2xl */
+@media (max-width: 1536px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* xl */
+@media (max-width: 1280px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+/* lg */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 768px;
+  }
+  .market-categories {
+     display: grid;
+     grid-template-columns: auto auto;
+     gap: 15px;
+     margin-bottom: 20px;
+  }
+  .shopkeeper-portrait {
+     width: auto;
+  }
+  .item {
+    width: auto;
+  }
+
+
+}
+
+/* md */
+@media (max-width: 768px) {
+  .container {
+    max-width: 640px;
+  }
+  .market-categories {
+     display: grid;
+     grid-template-columns: auto auto;
+     gap: 15px;
+     margin-bottom: 20px;
+  }
+  .shopkeeper-portrait {
+     width: auto;
+  }
+  .item {
+    width: auto;
+  }
+
+}
+
+/* sm
+@media (max-width: 640px) {
+  .container {
+    max-width: 475px;
+  }
+
+
+}
+
+
+@media (max-width: 475px) {
+  .container {
+    width: 100%;
+  }
+
+}
+
+*/

@@ -7,7 +7,8 @@
 {% block content %}
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/guild.css' %}">
-
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
   
   <div class="container1">
     <div>
@@ -20,28 +21,62 @@
           <div class="tab" data-type="other">Other</div>
         </div>
         <ul class="quest-list" id="questList">
-          <!-- Example quest items (to be generated dynamically) -->
-          <li data-type="kill">
-            <span>Easy Goblin Hunt (Kill) - Difficulty: Easy</span>
-            <button onclick="startQuest('Easy Goblin Hunt')">Start Quest</button>
+          {% for i in questBoard %}
+          {% if i.questType == 'Kill' %}
+          <li id="" data-type="kill">
+            <span>{{ i.questName }} ({{ i.questType }}) - Difficulty: {{ i.Difficulty }}</span>
+            <button id="{{ i.questName }}" class="actionButton">Start Quest</button>
           </li>
-          <li data-type="adventure">
-            <span>Forest Exploration (Adventure) - Difficulty: Medium</span>
-            <button onclick="startQuest('Forest Exploration')">Start Quest</button>
+          {% endif %}
+          {% if i.questType == 'Adventure' %}
+          <li data-type="adventure" >
+            <span>{{ i.questName }} ({{ i.questType }}) - Difficulty: {{ i.Difficulty }}</span>
+            <button id="{{ i.questName }}" class="actionButton">Start Quest</button>
           </li>
+          {% endif %}
+          {% if i.questType == 'Capture' %}
           <li data-type="capture">
-            <span>Bandit Capture (Capture) - Difficulty: Hard</span>
-            <button onclick="startQuest('Bandit Capture')">Start Quest</button>
+            <span>{{ i.questName }} ({{ i.questType }}) - Difficulty: {{ i.Difficulty }}</span>
+            <button id="{{ i.questName }}" class="actionButton">Start Quest</button>
           </li>
+          {% endif %}
+          {% if i.questType == 'Other' %}
+          <li data-type="other" >
+            <span>{{ i.questName }} ({{ i.questType }}) - Difficulty: {{ i.Difficulty }}</span>
+            <button id="{{ i.questName }}" class="actionButton">Start Quest</button>
+          </li>
+          {% endif %}
+
+          {% endfor %}
         </ul>
       </section>
 
       <!-- Equipment Workshop Section -->
       <section class="shop">
-        <h2>Guild shop</h2>
-        <p>Craft, repair, and upgrade your gear before taking on dangerous quests.</p>
-        <button onclick="openShop()">Open Shop</button>
-        <!-- This button can trigger modal or navigate to a workshop page -->
+        <div class="guildMasterSection">
+            <img src="{% static 'img/guildMaster.jpeg' %}" alt="Guild Master" class="guildMaster">
+            <div class="guildMasterText">
+                <p id="masterText">Amanda is talking with a traveller.</p>
+            </div>
+        </div>
+        <div class="sectionOne">
+          <div>
+              <button class="GMButton" data-target="talk"><strong>Talk</strong></button>
+              <button id="rewardsButton" class="GMButton" data-target="rewards"><strong>Rewards</strong></button>
+          </div>
+
+          <div id="talk" class="actionArea">
+            <p>What would you like to say?</p>
+            <textarea id="messageInput" maxlength="500" placeholder="Enter message here"></textarea>
+            <button id="sendButton">Ask Message</button>
+          </div>
+
+          <div id="rewards" class="actionArea">
+
+
+          </div>
+        </div>
+
       </section>
     </div>
     
@@ -49,31 +84,33 @@
       <section class="bulletin">
         <h2>Bulletin Board</h2>
         <ul>
-          <li>Guild meeting at 8 PM.</li>
-          <li>New equipment blueprints available!</li>
-          <li>Upcoming raid on the Dark Fortress.</li>
+          {% for i in questBoard %}
+          <li class="BBItem">{{ i.bulletinBoardEntry}}</li>
+          {% endfor %}
         </ul>
       </section>
       
       <!-- Guild Member Roster & Rankings -->
       <section class="roster">
         <h2>Member Roster</h2>
+        {% for i in npc %}
         <ul>
-          <li>ArcherAce - Level 15 - Top Contributor</li>
-          <li>BladeMaster - Level 18</li>
-          <li>SorcerySage - Level 17</li>
+          {% if i.party == "Ironstead Guild" %}
+          <li>{{ i.name }} - {{ i.party }}</li>
+          {% else %}
+          <li>{{ i.name }} - {{ i.party }} - <button id="{{ i.name }}" class="NPCButton">Talk</button></li>
+          {% endif %}
         </ul>
+        {% endfor %}
       </section>
       
       <!-- Guild Tavern / Chat -->
       <section class="chat">
-        <h2>Guild Tavern Chat</h2>
+        <h2>Guild Member Chat</h2>
         <div class="chat-area" id="chatArea">
-          <!-- Chat messages will appear here -->
-          <p><strong>ArcherAce:</strong> Ready for tonight's raid?</p>
-          <p><strong>BladeMaster:</strong> Need better gear before I jump in!</p>
         </div>
-        <input type="text" class="chat-input" placeholder="Type a message..." onkeypress="handleChat(event)">
+        <input type="text" class="chat-input" id="memberChatText" placeholder="Type a message...">
+        <button class="memberTalk" id="memberChat">Talk</button>
       </section>
     </aside>
   </div>

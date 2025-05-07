@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const registerForm = document.getElementById("registerForm");
   const loginBtn = document.getElementById("loginBtn");
   const registerBtn = document.getElementById("registerBtn");
-  const loginText = document.getElementById("loginText")
-  const registerText = document.getElementById("registerText")
-
+  const loginText = document.getElementById("loginText");
+  const registerText = document.getElementById("registerText");
+  const eyes = document.querySelectorAll('.eye');
 
   loginBtn.addEventListener("click", () => toggleForm("login"));
   registerBtn.addEventListener("click", () => toggleForm("register"));
@@ -26,6 +26,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Set the initial form to show (login by default)
+  // Show login by default
   toggleForm("login");
+
+  eyes.forEach(eye => {
+    eye.addEventListener('click', (e) => {
+      togglePassword(e);
+    });
+  });
 });
+
+function togglePassword(e) {
+  const button = e.target;
+  const passwordInput = button.previousElementSibling;
+
+  if (passwordInput.type === "password") {
+    passwordInput.type = "text";
+    button.textContent = "Hide";
+  } else {
+    passwordInput.type = "password";
+    button.textContent = "Show";
+  }
+}

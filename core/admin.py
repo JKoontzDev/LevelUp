@@ -172,6 +172,104 @@ class magicAdmin(admin.ModelAdmin):
     )
 
 
+class npcAdmin(admin.ModelAdmin):
+    list_display = ('name', 'prompt', 'description', 'party', 'is_traveller', 'occupation', 'alignment', 'location',
+                    'is_alive', 'level', 'image', 'gender', 'race', 'attitude')
+    search_fields = ('name', 'alignment', 'location', 'race')
+    ordering = ('name', )
+    fieldsets = (
+        ('details', {'fields': ('name', 'prompt', 'description', 'party', 'is_traveller', 'occupation', 'alignment', 'location',
+                    'is_alive', 'level', 'image', 'gender', 'race', 'attitude')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'name', 'prompt', 'description', 'party', 'is_traveller', 'occupation', 'alignment', 'location',
+                'is_alive', 'level', 'image', 'gender', 'race', 'attitude'),
+        }),
+    )
+
+
+class questBoardAdmin(admin.ModelAdmin):
+    list_display = ('questName', 'questType', 'Difficulty', 'goldValue', 'reputation', 'description', 'can_refresh', 'duration_hours', 'bulletinBoardEntry', 'location')
+    search_fields = ('questName', 'Difficulty', 'questType', 'location')
+    ordering = ('questName', )
+    fieldsets = (
+        ('details', {'fields': ('questName', 'questType', 'description', 'bulletinBoardEntry', 'location')}),
+        ('stats', {'fields': ('goldValue', 'reputation', 'Difficulty', 'can_refresh', 'duration_hours')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'questName', 'questType', 'Difficulty', 'goldValue', 'reputation', 'description', 'can_refresh', 'bulletinBoardEntry', 'location'),
+        }),
+    )
+
+
+class bulletinBoardAdmin(admin.ModelAdmin):
+    list_display = ('location', 'message')
+    search_fields = ('location', 'message')
+    ordering = ('location', 'message')
+    fieldsets = (
+        ('details', {'fields': ('location', 'message')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('location', 'message'),
+        }),
+    )
+
+
+
+class townsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'region', 'population', 'defense_level', 'monster_threat_level',
+                    'reputation', 'chronicle', 'travel_time', 'x', 'y')
+    search_fields = ('name', 'population', 'region')
+    ordering = ('name', 'region', 'defense_level')
+    fieldsets = (
+        ('details', {'fields': ('name', 'region', 'population', 'defense_level', 'monster_threat_level',
+                    'reputation', 'chronicle', 'travel_time', 'x', 'y')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('name', 'region', 'population', 'defense_level', 'monster_threat_level',
+                    'reputation', 'chronicle', 'travel_time', 'x', 'y'),
+        }),
+    )
+
+
+class npcDialogueAdmin(admin.ModelAdmin):
+    list_display = ('npc', 'trigger', 'response', 'condition_flag')
+    search_fields = ('npc',)
+    ordering = ('npc', 'trigger', 'response', 'condition_flag')
+    fieldsets = (
+        ('details', {'fields': ('npc', 'trigger', 'response', 'condition_flag')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('npc', 'trigger', 'response', 'condition_flag'),
+        }),
+    )
+
+
+class bugAdmin(admin.ModelAdmin):
+    list_display = ('title', 'details', 'status')
+    search_fields = ('title', 'status')
+    ordering = ('title', 'details', 'status')
+    fieldsets = (
+        ('details', {'fields': ('title', 'details', 'status')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('title', 'details', 'status'),
+        }),
+    )
+
+
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Rank, RankAdmin)
 admin.site.register(RankDetail, RankDetailsAdmin)
@@ -181,7 +279,12 @@ admin.site.register(Skill, skillsAdmin)
 admin.site.register(Armor, armorAdmin)
 admin.site.register(Weapon, weaponAdmin)
 admin.site.register(Magic, magicAdmin)
-
+admin.site.register(NPCS, npcAdmin)
+admin.site.register(questBoard, questBoardAdmin)
+admin.site.register(bulletinBoardExtra, bulletinBoardAdmin)
+admin.site.register(towns, townsAdmin)
+admin.site.register(NPCDialogueRule, npcDialogueAdmin)
+admin.site.register(BugsModel, bugAdmin)
 
 
 

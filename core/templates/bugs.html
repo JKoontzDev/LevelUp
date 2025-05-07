@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bugs.css' %}">
+
+    <title>Known Bugs</title>
+</head>
+<body>
+    <div class="container">
+    <h1>Known Bugs</h1>
+    <ul class="bug-list">
+        {% for i in bugs %}
+          <li class="bug-item" style="--index: 1;">
+            <div class="bug-title">{{ bugs.title }}</div>
+            <div class="bug-details">
+              <p>{{ bugs.details }}</p>
+              <p><strong>Workaround:</strong> {{bugs.workaround}}</p>
+              <p class="bug-status">Status: {{bugs.status}}</p>
+            </div>
+          </li>
+        {% endfor %}
+    </ul>
+  </div>
+    <script src="{% static 'js/bugs.js' %}"></script>
+
+</body>
+</html>

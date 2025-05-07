@@ -23,11 +23,13 @@ class CustomUserCreationForm(UserCreationForm):
         })
 
         self.fields['password1'].widget.attrs.update({
-            'placeholder': 'Enter your password'
+            'placeholder': 'Enter your password',
+            'class': 'passwordView'
         })
 
         self.fields['password2'].widget.attrs.update({
-            'placeholder': 'Confirm your password'
+            'placeholder': 'Confirm your password',
+            'class': 'passwordView'
         })
 
 
@@ -37,12 +39,20 @@ class loginForm(forms.Form):
             'class': 'username',
             'placeholder': 'Enter your username'
         }))
-    password = forms.CharField(max_length=30, required=True, widget=forms.PasswordInput(attrs={'placeholder': 'Enter your password'}))
+    password = forms.CharField(max_length=30, required=True, widget=forms.PasswordInput(attrs={'placeholder': 'Enter your password',
+                                                                                               'class': 'passwordView'}))
 
 
 class settingsForm(forms.Form):
     number_of_quests = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'placeholder': 'Enter your goal'}))
     profile_pic = forms.ImageField(required=False)
+    problem_report = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 5, 'placeholder': 'Please describe the bug in detail, including steps to reproduce it.'}),
+        max_length=1000,
+        required=False,
+        label='Describe the bug',
+        help_text='Include steps to reproduce the issue.'
+    )
 
 
 

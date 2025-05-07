@@ -30,6 +30,19 @@
         {% endif %}
     </section>
 
+    {% if guildQuestInfo != False %}
+    <section class="quests-panel">
+        <h3>Guild Quest</h3>
+        <div class="task">
+            <span >{{ guildQuestInfo.questName }}</span>
+            <span >{{ guildQuestInfo.questType }}</span>
+        </div>
+        <div class="task">
+            <span >{{guildQuestTime}}</span>
+        </div>
+    </section>
+    {% endif %}
+
     <section class="progress-overview">
         <h3>Progress Overview</h3>
         <p>Weekly tasks completed: <span id="weeklyCom">{{user.percent_weekly_completed}}%</span></p>
@@ -60,7 +73,13 @@
 
     <section class="quests-panel">
         <h3>World Map</h3>
-        <a href="{% url 'worldMapPage' username=user.username %}"><div class="task urgent mapButton"><p>Open Map</p></div></a>
+        {% if questDone %}
+                <a href="{% url 'worldMapPage' username=user.username %}"><div class="task urgent mapButton"><p>Open Map</p></div></a>
+
+        {% else %}
+            <div class="task urgent mapButton"><p>While on an adventure, the map can't be accessed.</p></div>
+
+        {% endif %}
 
     </section>
 

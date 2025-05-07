@@ -127,3 +127,21 @@ a:hover {
 .pointer{
     cursor: pointer;
 }
+
+.eye {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+
+}
+.passwordDiv {
+    position: relative;
+}
+
+li{
+    color: black;
+    width: 18vw;
+}

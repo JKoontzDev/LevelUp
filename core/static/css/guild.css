@@ -1,10 +1,3 @@
-
- header {
-     background: #282a36;
-     padding: 20px;
-     text-align: center;
-     border-bottom: 2px solid #44475a;
-}
  header h1 {
      margin: 0;
 }
@@ -19,6 +12,7 @@
      background: #44475a;
      padding: 15px;
      border-radius: 8px;
+     margin-bottom: 6vh;
 }
  .quest-board h2, .guild-extra h2 {
      margin-top: 0;
@@ -59,6 +53,9 @@
  .shop, .bulletin, .roster, .chat {
      margin-bottom: 20px;
 }
+.BBItem {
+    margin-bottom: 10px;
+ }
  .chat-area {
      background: #1d1f21;
      height: 150px;
@@ -74,4 +71,234 @@
      border: none;
      margin-top: 10px;
 }
+ .shop {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+}
 
+
+ .sectionOne {
+    display: flex;
+    flex-direction: column;
+
+ }
+
+.guildMasterSection {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
+    width: fit-content;
+    max-width: 25vw;
+}
+
+.guildMaster {
+    height: auto;
+    width: 25vw;
+    max-width: 100%;
+    border: solid 4px black;
+    border-radius: 10px;
+    display: block;
+    margin-bottom: 0;
+}
+
+.guildMasterText {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    margin-top: 0;
+    border: solid 4px black;
+    border-top: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    overflow: hidden;
+}
+
+#masterText {
+    margin: 0;
+    padding: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    width: 100%;
+    white-space: normal;
+    display: block;
+    box-sizing: border-box;
+}
+
+.actionArea{
+    display: none;
+    justify-content: center;
+    flex-direction: column;
+    transition: 3s;
+ }
+ .actionArea.active{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+ }
+
+ .GMButton{
+    width: 6vw;
+    height: 5vh;
+    margin: 10px;
+    cursor: pointer;
+    background-color: rgb(98, 114, 164);
+    border: none;
+    border-radius: 6px;
+    color: white;
+
+ }
+  .GMButton.active {
+     background: #50fa7b;
+     color: #1d1f21;
+}
+
+#sendButton{
+    cursor: pointer;
+    background-color: rgb(98, 114, 164);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    margin-top: 4px;
+    width: auto;
+}
+#messageInput{
+    border-radius: 10px;
+}
+
+.NPCButton{
+    width: auto;
+    height: auto;
+    margin: 10px;
+    cursor: pointer;
+    background-color: rgb(98, 114, 164);
+    border: none;
+    border-radius: 6px;
+    color: white;
+ }
+
+.memberTalk {
+    background-color: rgb(98, 114, 164);
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 10px;
+    color: white;
+}
+.actionButton {
+    width: auto;
+    height: auto;
+    margin: 10px;
+    cursor: pointer;
+    background-color: rgb(98, 114, 164);
+    border: none;
+    border-radius: 6px;
+    color: white;
+}
+
+
+
+
+
+/* 2xl */
+@media (max-width: 1536px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* xl */
+@media (max-width: 1280px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+/* lg */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 768px;
+  }
+  .container1 {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+}
+  .memberTalk {
+      margin-top: 4px;
+      height: 4vh;
+      width: 100%;
+  }
+  .guildMasterSection {
+    max-width: 50vw;
+  }
+  .guildMaster {
+    height: auto;
+    width: 38vw;
+  }
+  .GMButton{
+    width: auto;
+    height: auto;
+ }
+
+
+}
+
+/* md */
+@media (max-width: 768px) {
+  .container {
+    max-width: 640px;
+  }
+  .container1 {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+}
+  .memberTalk {
+      margin-top: 4px;
+      height: 4vh;
+      width: 100%;
+  }
+  .guildMasterSection {
+    max-width: 50vw;
+  }
+  .guildMaster {
+    height: auto;
+    width: 50vw;
+  }
+  .GMButton{
+    width: auto;
+    height: auto;
+ }
+
+
+
+}
+
+/* sm
+@media (max-width: 640px) {
+  .container {
+    max-width: 475px;
+  }
+
+
+}
+
+
+@media (max-width: 475px) {
+  .container {
+    width: 100%;
+  }
+
+}
+
+*/

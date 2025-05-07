@@ -29,12 +29,17 @@ urlpatterns = [
     path('dashboard/<str:username>/ironstead/training/grab', views.trainingGrab, name='trainingGrab'),
     # settings
     path('dashboard/<str:username>/settings/', views.settings, name='settings'),
+    path('known/bugs', views.bugs, name='bugs'),
+
+    #  guild
+    path('dashboard/<str:username>/ironstead/guild/hall', views.ironsteadGuildHall, name='ironsteadGuild'),
+    path('dashboard/<str:username>/ironstead/guild/hall/api', views.guildHallAPI, name='guildapi'),
+    path('dashboard/<str:username>/npc', views.npc_chat_api, name='npc_chat_api'),
 
     #dead screen
     path('dead/<str:username>/', views.deadView, name='deadView'),
     path('404/', views.handler404, name='handler404'),  # remove in production
     path('500/', views.server_error_view, name='handler500'),  # remove in production
-    path('dashboard/<str:username>/ironstead/guild/hall', views.guildHall, name='guild')
 ]
 handler404 = 'core.views.handler404'
 handler500 = 'core.views.server_error_view'

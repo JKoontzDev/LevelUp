@@ -106,8 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function displayItems(category, items) {
     itemGrid.innerHTML = ''; // Clear the grid
 
-
-
     if (items[category].length == 0) {
         const itemElement = document.createElement('div');
         itemElement.className = 'item';

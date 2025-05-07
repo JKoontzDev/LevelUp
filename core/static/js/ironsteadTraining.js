@@ -14,6 +14,7 @@ const motivation = document.querySelector('meta[name="motivation"]').content;
 
 
 
+
 weaponSelect.addEventListener('change', function() {
   const selectedWeapon = weaponSelect.value;
 
@@ -692,6 +693,10 @@ buttons.forEach(button => {
         .then(responseData => {
             console.log(responseData);
             detailsSection.textContent = '';
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: 'smooth'
+            });
 
             if (responseData.skill){
                 const skillSet = responseData.skillSet;

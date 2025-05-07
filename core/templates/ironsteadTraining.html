@@ -15,7 +15,7 @@
 
     <div class="traingGrounds">
         <div class="character-stats">
-            <h2>{{character.character_name}}s Stats</h2>
+            <h2 class="namedStats">{{character.character_name}}s Stats</h2>
             <div class="item-display">
                 <div class="stat-item">
                     <h5>{{ character.character_name }}s Health</h5>
@@ -56,14 +56,14 @@
         </div>
 
         <div class="character-avatar">
-            <p>CHARACTER IMG</p>
+            <img src="#" alt="User Avatar">
             <div class="messageDiv">
                 <p id="characterMessage"></p>
             </div>
         </div>
 
         <div class="character-skills">
-            <h2 class="right">{{character.character_name}}s Skills</h2>
+            <h2 class="namedStats">{{character.character_name}}s Skills</h2>
             <div class="item-display">
                 {% for skill in skills %}
                 <div class="stat-item">

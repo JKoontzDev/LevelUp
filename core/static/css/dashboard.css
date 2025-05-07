@@ -135,6 +135,14 @@ body {
   .container {
     max-width: 768px;
   }
+  .main-content {
+     display: grid;
+     grid-template-columns: auto;
+     margin: 20px;
+ }
+   .quests-panel, .progress-overview, .health-tracker, .settings, .message-board {
+     width: 70vw;
+}
 
 
 }
@@ -149,7 +157,7 @@ body {
      grid-template-columns: auto;
      margin: 20px;
  }
-   .quests-panel, .progress-overview, .health-tracker {
+   .quests-panel, .progress-overview, .health-tracker, .settings, .message-board {
      width: 70vw;
 }
 
@@ -165,7 +173,7 @@ body {
      grid-template-columns: auto;
      margin: 20px;
  }
-   .quests-panel, .progress-overview, .health-tracker {
+   .quests-panel, .progress-overview, .health-tracker, .settings, .message-board {
      width: 70vw;
 }
 
@@ -181,7 +189,7 @@ body {
      grid-template-columns: auto;
      margin: 20px;
  }
-  .quests-panel, .progress-overview, .health-tracker {
-     width: auto;
+  .quests-panel, .progress-overview, .health-tracker, .settings, .message-board {
+     width: 70vw;
 }
 }

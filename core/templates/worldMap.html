@@ -1,12 +1,26 @@
 
     {% load static %}
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.05, maximum-scale=5,
+ user-scalable=yes, orientation=portrait">
+    <meta name="viewport" content="width = device-width"/>
     <link rel="stylesheet" href="{% static 'css/worldMap.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'img/LU.png' %}">
 
-    <div class="map">
+
+    <div class="map-wrapper">
+      <div class="map">
+         <img src="{% static 'img/worldMap.png' %}" alt="World Map" class="map-img">
+
         <a href="{% url 'ironsteadPage' username=user.username %}" class="area ironstead">Ironstead</a>
         <a href="dungeon.html" class="area dungeon">Dungeon</a>
+      </div>
     </div>
+
+
+
+
+
 
 
 
