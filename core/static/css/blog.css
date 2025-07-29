@@ -1,0 +1,168 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    color: #0a2740;
+    line-height: 1.6;
+}
+
+.page-wrapper {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+    background: linear-gradient(to bottom, #16213e, #0f3460);
+    color: #ffffff;
+    padding: 30px 20px;
+    text-align: center;
+    position: relative;
+}
+
+header h1 {
+    font-family: cursive, sans-serif;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+header nav {
+    margin-top: 10px;
+}
+
+header nav a {
+    color: #ff9800;
+    text-decoration: none;
+    margin: 0 10px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+header nav a:hover {
+    color: #e68900;
+}
+
+/* Search Bar */
+header form {
+    margin-top: 20px;
+}
+
+header input[type="search"] {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 250px;
+    max-width: 80%;
+}
+
+header span {
+    padding: 10px 15px;
+    background-color: #ff9800;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-left: 10px;
+}
+
+header button:hover {
+    background-color: #e68900;
+}
+
+/* Main Blog Section */
+main {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+    flex: 1;
+
+
+}
+
+.ancorButton{
+    cursor: pointer;
+}
+
+.tagSection {
+    display: hidden;
+}
+
+
+/* Blog Post Cards */
+article {
+    background-color: #f9f9f9;
+    border-left: 5px solid #ff9800;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.3s;
+}
+
+article:hover {
+    transform: scale(1.01);
+}
+
+article h2 {
+    margin-top: 0;
+    font-family: cursive, sans-serif;
+    font-size: 1.7rem;
+    margin-bottom: 5px;
+}
+
+article h2 a {
+    color: #0a2740;
+    text-decoration: none;
+}
+
+article h2 a:hover {
+    color: #ff9800;
+}
+
+article p {
+    color: #333;
+}
+
+article small {
+    display: block;
+    margin-bottom: 10px;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+footer {
+    background: linear-gradient(to bottom, #16213e, #0f3460);;
+    color: #fff;
+    text-align: center;
+    padding: 30px 20px;
+}
+
+footer p {
+    margin: 0;
+}
+
+footer a {
+    color: white;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+
+    article {
+        padding: 15px;
+    }
+
+    header input[type="search"] {
+        width: 80%;
+    }
+
+    main {
+        padding: 0 15px;
+    }
+}

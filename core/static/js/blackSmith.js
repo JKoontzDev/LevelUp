@@ -105,7 +105,7 @@ const buttons = document.querySelectorAll('.action-btn');
 const blackSmithText = document.querySelector('.blacksmith-greeting');
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const username = document.querySelector('meta[name="username"]').content;
-const url = '/dashboard/${username}/ironstead/blacksmith/items';
+const url = `/dashboard/${username}/ironstead/blacksmith/items`;
 const itemGrid = document.getElementById('actionContent');
 const loading = document.getElementById('loading');
 const upgradePanelDiv = document.getElementById("upgradePanel");
@@ -435,6 +435,7 @@ function upgradeFunction() {
         return response.json(); // Parse JSON response
     })
     .then(responseData => {
+        //console.log(responseData)
         const item = responseData.items;
         const ingredients = responseData.ingredients;
         //bellow is to add ingredients
@@ -479,7 +480,7 @@ function upgradeFunction() {
                   flexDiv.appendChild(div);
 
                   const itemImage = document.createElement("img");
-                  itemImage.src = item.image || "default-item.png"; // Add item.image for dynamic icons
+                  itemImage.src = item.imgUrl || "default-item.png"; // Add item.image for dynamic icons
                   itemImage.alt = `${item.name}`;
                   itemImage.className = "item-icon";
                   div.appendChild(itemImage);

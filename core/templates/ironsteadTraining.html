@@ -13,8 +13,8 @@
     <meta name="motivation" content="{{ character.current_motivation }}">
 
 
-    <div class="traingGrounds">
-        <div class="character-stats">
+    <div class="traingGrounds" data-page="trainingGrounds">
+        <div class="character-stats" id="character-stats">
             <h2 class="namedStats">{{character.character_name}}s Stats</h2>
             <div class="item-display">
                 <div class="stat-item">
@@ -31,12 +31,14 @@
                     <select id="weapon-select">
                       <option value="">Select a Weapon</option>
                       {% if weapon %}
-                        <option value="{{ weapon.weapon_id }}">{{ weapon.weapon_name }}</option>
+                        {% for i in weapon %}
+                        <option value="{{ i.weapon_id }}">{{ i.weapon_name }}</option>
+                        {% endfor %}
                       {% else %}
                         <option value="">No weapons available</option>
                       {% endif %}
                     </select>
-                    <button data-action="stat-details" id="details-button" class="detail-button">Details</button>
+                    <button data-category="weapon" data-action="stat-details" id="details-button" class="detail-button">Details</button>
                 </div>
                 <div class="stat-item">
                     <h5>{{ character.character_name }}s Magic Efficiency</h5>
@@ -48,7 +50,7 @@
                         <option value="">No magic available</option>
                       {% endif %}
                     </select>
-                    <button data-action="stat-details" id="details-button-magic" class="detail-button">Details</button>
+                    <button data-category="magic" data-action="stat-details" id="details-button-magic" class="detail-button">Details</button>
 
                 </div>
             </div>
@@ -56,15 +58,20 @@
         </div>
 
         <div class="character-avatar">
-            <img src="#" alt="User Avatar">
             <div class="messageDiv">
+                <h2>{{ character.character_name }}'s thoughts</h2>
                 <p id="characterMessage"></p>
             </div>
         </div>
 
-        <div class="character-skills">
+        <div class="character-skills" id="character-skills">
             <h2 class="namedStats">{{character.character_name}}s Skills</h2>
             <div class="item-display">
+                {% if not skills %}
+                 <div class="stat-item">
+                    <h4>You have 0 skills</h4>
+                </div>
+                {% else %}
                 {% for skill in skills %}
                 <div class="stat-item">
                     <h5 class="skill-header">{{ skill.name }}</h5>
@@ -72,6 +79,7 @@
                     <button data-action="{{skill.name}}" class="detail-button">Details</button>
                 </div>
                 {% endfor %}
+                {% endif %}
             </div>
         </div>
     </div>

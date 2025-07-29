@@ -3,8 +3,8 @@ const tabs = document.querySelectorAll('.tab');
 const questList = document.getElementById('questList');
 const username = document.querySelector('meta[name="username"]').content;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-const url = '/dashboard/${username}/ironstead/guild/hall/api';
-const npc = '/dashboard/<str:username>/npc';
+const url = `/dashboard/${username}/ironstead/guild/hall/api`;
+const npc = `/dashboard/${username}/npc`;
 const masterText = document.getElementById('masterText');
 //action tabs
 const talkTab = document.getElementById('talk');
@@ -13,7 +13,7 @@ const memberChatButton = document.getElementById('memberChat');
 const npcButtons = document.querySelectorAll(".NPCButton");
 const rewardsButton = document.getElementById("rewardsButton");
 
-
+let questGoldValue;
 
 // quest tabs
 tabs.forEach(tab => {
@@ -47,12 +47,6 @@ function filterQuests(type) {
 
 
 
-//function openShop() {
-//  alert("Opening equipment workshop. Prepare your gear!");
-  // Navigate to a detailed workshop view or open a modal window.
-//}
-
-
 let currentNPC = null;
 
 npcButtons.forEach(button => {
@@ -62,7 +56,7 @@ npcButtons.forEach(button => {
         while (chatArea.firstChild) {
             chatArea.removeChild(chatArea.firstChild);
         }
-        console.log("NPC clicked:", npcId);
+        //console.log("NPC clicked:", npcId);
         currentNPC = npcId;
         const newMessage = document.createElement('p');
         newMessage.innerHTML = `<strong>${npcId}:</strong> Hello Traveller`;
@@ -76,10 +70,9 @@ npcButtons.forEach(button => {
 
 memberChatButton.addEventListener("click", () => {
     //console.log(currentNPC);
-
     if (!currentNPC) return;
     const memberChatText = document.getElementById('memberChatText').value;
-    console.log(memberChatText);
+    //console.log(memberChatText);
     document.getElementById('memberChatText').value = '';
     const chatArea = document.getElementById('chatArea');
     const newMessage = document.createElement('p');
@@ -102,7 +95,7 @@ memberChatButton.addEventListener("click", () => {
                 return response.json(); // Parse JSON response
             })
             .then(responseData => {
-                console.log(responseData);
+                //console.log(responseData);
                 const chatArea = document.getElementById('chatArea');
                 const newMessage = document.createElement('p');
                 newMessage.innerHTML = `<strong>${currentNPC}:</strong> ${responseData.response}`;
@@ -133,7 +126,7 @@ function getMasterText() {
                 return response.json(); // Parse JSON response
             })
             .then(responseData => {
-                console.log(responseData);
+                //console.log(responseData);
                 masterText.textContent = responseData.response;
             })
 }
@@ -165,7 +158,7 @@ function talkToMaster(message) {
                 return response.json(); // Parse JSON response
             })
             .then(responseData => {
-                console.log(responseData);
+                //console.log(responseData);
                 masterText.textContent = responseData.response;
             })
 }
@@ -205,11 +198,9 @@ buttons.forEach(button => {
             return response.json(); // Parse JSON response
         })
         .then(responseData => {
-            console.log(responseData);
+            //console.log(responseData);
         })
-
-
-        })
+    })
 })
 
 
@@ -233,7 +224,8 @@ function getReward(item) {
             return response.json(); // Parse JSON response
         })
         .then(responseData => {
-           masterText.textContent = `Here is your ${item}, thank you!`;
+           console.log(responseData);
+           masterText.textContent = `Here is your ${item}, and your ${responseData.gold} gold, thank you!`;
            rewardsTab.textContent = 'No rewards to redeem';
            const btn = document.getElementById(item);
            const li = btn?.closest("li");
@@ -267,12 +259,13 @@ rewardsButton.addEventListener("click", () => {
         .then(responseData => {
             //console.log(responseData);
             items = responseData.reward;
-            console.log(items);
+            //console.log(items);
             if (typeof items == 'undefined') {
                 rewardsTab.textContent = 'No rewards to redeem';
                 masterText.textContent = `Once you finish a quest, your reward will be here.`;
 
             } else {
+                questGoldValue = responseData.gold;
                 masterText.textContent = `Welcome back! I see you finished ${responseData.questName}. Which reward would you like?`;
                 items.forEach(item => {
                     const rewardContainer = document.createElement('div');

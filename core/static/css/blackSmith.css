@@ -54,7 +54,11 @@
      margin-bottom: 20px;
      display: grid;
     grid-template-columns: 1fr 1fr 1fr;
+    overflow-y: auto;
+    justify-content: center;
+    align-items: center;
 
+    place-items: center;
 }
 
  .flexDiv{
@@ -280,7 +284,23 @@
      grid-template-columns: auto auto;
 }
 .action-content {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto;
+    place-items: center;
+    overflow-y: auto;
+    max-height: 50vh;
+}
+.upgrade-panel {
+  display: none;
+  width: 90%;
+  max-width: 100%;
+  background: linear-gradient(135deg, #333, #555)
+  border: 2px solid #00f5ff;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  z-index: 1000;
+
+
 }
 
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from core.models import CustomUser
+from core.models import CustomUser, enemies
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -53,6 +53,60 @@ class settingsForm(forms.Form):
         label='Describe the bug',
         help_text='Include steps to reproduce the issue.'
     )
+    improvements = forms.CharField(
+        widget=forms.Textarea(
+            attrs={'rows': 2, 'placeholder': 'Please describe improvements here'}),
+        max_length=500,
+        required=False,
+        label='Improvements',
+    )
 
 
 
+class taskForm(forms.Form):
+    TASK_FREQUENCY_CHOICES = [
+        ('everyday', 'Everyday'),
+        ('random', 'Random'),
+    ]
+    title = forms.CharField(required=True, widget=forms.TextInput(attrs={'placeholder': 'Enter your task title'}))
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 5, 'placeholder': 'Please describe this task'}),
+        max_length=400,
+        required=True,
+        label='Describe this task',
+        help_text='Describe this task'
+    )
+    frequency = forms.ChoiceField(
+        label='Frequency',
+        choices=TASK_FREQUENCY_CHOICES,
+        widget=forms.RadioSelect,
+        initial='everyday'
+    )
+
+
+class SceneForm(forms.Form):
+    scene_id = forms.CharField(max_length=100, label="Scene ID")
+    character = forms.CharField(widget=forms.Textarea, label="Character Name")
+    character_url = forms.CharField(widget=forms.Textarea, label="Character Url")
+    dialogue = forms.CharField(widget=forms.Textarea, label="Dialogue")
+    enemies = forms.CharField(
+        required=False,
+        widget=forms.Textarea,
+        label="Enemies (one per line)",
+        help_text="Enter enemy names exactly as stored in the Enemy model."
+    )
+
+
+class ChoiceForm(forms.Form):
+    text = forms.CharField(label="Choice Text")
+    next_scene = forms.CharField(label="Next Scene ID")
+    stats_requirement = forms.CharField(
+        required=False,
+        label="Stats Requirement (e.g. strength:5)",
+        help_text="Format: stat:amount (e.g. strength:5)"
+    )
+    inventory_requirement = forms.CharField(
+        required=False,
+        label="Inventory Requirement (comma-separated)",
+        help_text="e.g. gold_coin,sword"
+    )

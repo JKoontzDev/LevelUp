@@ -12,7 +12,7 @@
     <meta name="viewport" content="width = device-width"/>
     <link rel="stylesheet" href="{% static 'css/ironstead.css' %}">
 
-    <div class="map-wrapper">
+    <div class="map-wrapper" data-page="map">
         <div class="map">
             <img src="{% static 'img/ironstead.webp' %}" alt="World Map" class="map-img">
             <a href="{% url 'marketView' username=user.username %}" class="area market">Market</a>

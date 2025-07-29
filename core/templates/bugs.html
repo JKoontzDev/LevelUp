@@ -14,11 +14,11 @@
     <ul class="bug-list">
         {% for i in bugs %}
           <li class="bug-item" style="--index: 1;">
-            <div class="bug-title">{{ bugs.title }}</div>
+            <div class="bug-title">{{ i.title }}</div>
             <div class="bug-details">
-              <p>{{ bugs.details }}</p>
-              <p><strong>Workaround:</strong> {{bugs.workaround}}</p>
-              <p class="bug-status">Status: {{bugs.status}}</p>
+              <p>{{ i.details }}</p>
+              <p><strong>Workaround:</strong> {{i.workaround}}</p>
+              <p class="bug-status">Status: {{i.status}}</p>
             </div>
           </li>
         {% endfor %}

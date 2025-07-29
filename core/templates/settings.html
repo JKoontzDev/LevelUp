@@ -23,6 +23,7 @@
                 </div>
                 <div class="gridFlex">
                     <h2>Daily number of quests</h2>
+                    <p>Current Number of Quests: {{user.base_number_of_quests}}</p>
                     {{ form.number_of_quests }}
                 </div>
                 <div class="gridFlex">
@@ -31,6 +32,12 @@
                         to check our <a href="{% url 'bugs' %}" class="links">known issues page</a>.</p>
                     {{ form.problem_report }}
                     <div class="thankText">Thank you for reporting the bug. I will review your report and may contact you for more information.</div>
+                </div>
+                <div class="gridFlex">
+                    <h2>Improvements</h2>
+                    <p class="thankText">Please provide constructive feedback to help me enhance my work.
+                        Highlight what you appreciate and suggest specific additions or improvements to make LevelUp more fun and engaging!</p>
+                    {{ form.improvements }}
 
                 </div>
             </div>

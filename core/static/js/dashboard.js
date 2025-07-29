@@ -18,6 +18,23 @@ const motivationBar = document.getElementById('fillMotivation');
 const healthBar = document.getElementById('fillHealth');
 
 
+// bellow is used for health and motivation
+
+window.addEventListener('DOMContentLoaded', () => {
+  const fill = document.getElementById('fillHealth');
+  const fillMot = document.getElementById('fillMotivation');
+  const target = fill.dataset.health;
+  const targetMot = fillMot.dataset.mot;
+  // Add a short delay to trigger the transition cleanly
+  setTimeout(() => {
+    fill.style.width = target + '%';
+  }, 100);
+  setTimeout(() => {
+    fillMot.style.width = targetMot + '%';
+  }, 100);
+});
+
+
 let num = 0;
 
 daily_task_check.forEach((checkbox, index) => {
@@ -51,6 +68,8 @@ daily_task_check.forEach((checkbox, index) => {
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken,
+                        'X-Custom-User': username
+
                     },
                     body: JSON.stringify(data),
                 })
@@ -62,12 +81,15 @@ daily_task_check.forEach((checkbox, index) => {
                     })
                     .then(responseData => {
                         //add items to dashboard
+
                         toMessageBoard(responseData.messageBoard);
                         fetch(`/dashboard/${username}/`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRFToken': csrfToken,
+                                'X-Custom-User': username,
+
                             },
                             body: JSON.stringify(responseData),
                         })
@@ -201,4 +223,3 @@ function toMessageBoard(message) {
 
 }
 
-// bellow is used for health and motivation

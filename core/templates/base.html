@@ -22,19 +22,21 @@
         {% endblock %}
     </title>
 </head>
-<body>
+<body >
     <meta name="exp" content="{{ character.exp }}">
+    <meta name="tutorial" content="{{ tutorial }}">
+
 
     <div class="wrapper">
 
 
         <div class="background-animation"></div>
         <header class="hero">
-            <div class="profile-card">
+            <div class="profile-card" id="character">
                 <a href="{% url 'characterPage' username=user.username %}"><img src="{{user.profile_picture.url}}" alt="User Avatar"></a>
                 <div class="info">
                     <div  class="username">{{ character.rank }}</div>
-                    <div title="{{ character.exp }}%" class="xp-bar hover-box"><div id="fillExp" style="width: {{ character.exp }}%;"></div></div>
+                    <div title="{{ character.exp }}%" class="xp-bar hover-box"><div id="fillExp" data-exp="{{ character.exp }}"></div></div>
                 </div>
             </div>
             <div>
@@ -55,9 +57,12 @@
         </div>
 
         <footer class="footer">
-            <button class="challenge-btn">Today's Special Challenge</button>
+            <button id="fireButton" class="challenge-btn">Fuel My Fire🔥</button>
         </footer>
     </div>
+    <script src="{% static 'js/base.js' %}"></script>
+    <script src="{% static 'js/tutorial.js' %}"></script>
+
 
 </body>
 </html>

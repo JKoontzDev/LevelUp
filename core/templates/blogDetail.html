@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Level Up – Tech Blog</title>
+  <meta name="description" content="Level Up is a gamified motivation/goal tracker webapp" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Level Up",
+    "description": "Dev blog for the project Level Up"
+  }
+  </script>
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'css/blogDetails.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Level Up Dev Blog</h1>
+    <nav>
+
+      <a class="ancorButton" href="{% url 'home' %}">Home</a> |
+      <a class="ancorButton" href="{% url 'blog_page' %}">Blog</a>
+
+    </nav>
+  </header>
+  <div class="wrapper">
+      <main class="blog-container">
+        {% load static %}
+        <article class="blog-post">
+            <div class="post-header">
+                <h1 class="post-title">{{ post.title }}</h1>
+                <p class="post-meta">
+                    By <span class="author">{{ post.author }}</span> •
+                    <span class="date">{{ post.created_at|date:"F j, Y" }}</span>
+                </p>
+            </div>
+
+            <section class="post-content">
+                {{ post.content|safe }}
+            </section>
+
+        </article>
+      </main>
+
+      <footer>
+        <p>© 2025 LevelUp. All rights reserved. <a href="{% url 'privacyPolicy' %}">Privacy Policy</a> | <a href="{% url 'termsService' %}">Terms of Service</a></p>
+      </footer>
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+

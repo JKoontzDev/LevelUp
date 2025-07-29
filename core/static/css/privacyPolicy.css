@@ -1,0 +1,60 @@
+/* Terms and Privacy Sections */
+.terms-section, .privacy-section {
+    padding: 50px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background: linear-gradient(to bottom, #16213e, #0f3460);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    margin-bottom: 3vh;
+}
+
+.terms-section h1, .privacy-section h1 {
+    font-size: 2.5rem;
+    font-family: 'Spectral SC', serif;
+    color: #00f260;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.terms-section h2, .privacy-section h2 {
+    font-size: 1.8rem;
+    color: #00b4d8;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.terms-section p, .privacy-section p {
+    font-size: 1rem;
+    color: #d1d1d1;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.terms-section ul, .privacy-section ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+
+.terms-section ul li, .privacy-section ul li {
+    font-size: 1rem;
+    color: #d1d1d1;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.terms-section a, .privacy-section a {
+    color: #00b4d8;
+    text-decoration: none;
+}
+
+.terms-section a:hover, .privacy-section a:hover {
+    color: #00f260;
+}
+
+.footer {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 40px 20px;
+}
+

@@ -8,14 +8,18 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/character.css' %}">
 
-    <div class="main">
+    <div class="main" data-page="character">
         <div class="navagation">
             <button id="spellButton" class="navButton">Spell Book</button>
             <button id="skillsButton" class="navButton">Skills</button>
             <button id="backpackButton" class="navButton">Backpack</button>
+            <button id="weaponsButton" class="navButton">Weapons</button>
+            <button id="armorsButton" class="navButton">Armors</button>
+            <button class="navButton">Gold: {{ character.gold }}</button>
+
         </div>
         <div class="grid">
-            <div class="gridItem">
+            <div class="gridItem pfpPic">
                 <img src="{{user.profile_picture.url}}" alt="Avatar" class="avatar" />
             </div>
 
@@ -24,13 +28,13 @@
                 <div id="spellbook" class="content-section">
                       <h2>Spellbook</h2>
                       <ul>
-                          {% if not spellBook %}
-                          <li>You have no spells</li>
-                          {% else %}
-                          {% for i in spellBook %}
-                          <li>{{ i.name }}</li>
-                          {% endfor %}
-                          {% endif %}
+                        {% if spellBook %}
+                            {% for spell in spellBook %}
+                                <li data-description="{{ spell.description|escape }}">{{ spell.name }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>You have no spells</li>
+                        {% endif %}
                       </ul>
                     </div>
 
@@ -41,7 +45,7 @@
                       <li>You have no skills</li>
                       {% else %}
                       {% for i in skillSet %}
-                    <li>{{ i.name }}</li>
+                    <li data-description="{{ i.description|escape }}">{{ i.name }}</li>
                       {% endfor %}
                       {% endif %}
 
@@ -52,8 +56,26 @@
                   <h2>Backpack</h2>
                   <ul class="itemList">
                       {% for i in backpack %}
-                    <li>{{ i.name}}: {{ i.quantity }}</li>
+                    <li data-description="{{ i.description|escape }}">{{ i.name}}: {{ i.quantity }}</li>
                       {% endfor %}
+                  </ul>
+                </div>
+
+                <div id="weapons" class="content-section">
+                  <h2>Weapons</h2>
+                  <ul class="itemList">
+                      {% for i in weapons %}
+                    <li data-description="{{ i.description|escape }}">{{ i.name}}</li>
+                      {% endfor %}
+                  </ul>
+                </div>
+
+                <div id="armors" class="content-section">
+                  <h2>Armors</h2>
+                  <ul class="itemList">
+                    {% for i in armors %}
+                      <li data-description="{{ i.description|escape }}">{{ i.name }}</li>
+                    {% endfor %}
                   </ul>
                 </div>
 

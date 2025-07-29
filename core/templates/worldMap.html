@@ -11,9 +11,11 @@
     <div class="map-wrapper">
       <div class="map">
          <img src="{% static 'img/worldMap.png' %}" alt="World Map" class="map-img">
-
+        <a href="{% url 'dashboard' username=user.username %}" class="area dashboard">Dashboard</a>
         <a href="{% url 'ironsteadPage' username=user.username %}" class="area ironstead">Ironstead</a>
-        <a href="dungeon.html" class="area dungeon">Dungeon</a>
+          {% if character.dungeon_quest_available %}
+        <a href="{% url 'adventureQuests' username=user.username %}" class="area dungeon">Dungeon</a>
+          {% endif %}
       </div>
     </div>
 

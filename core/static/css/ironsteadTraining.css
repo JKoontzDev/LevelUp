@@ -6,6 +6,16 @@
     width: 100%;
 
 }
+.pfpPic{
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-right: 15px;
+    border: 2px solid #00b4d8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .character-stats{
     display: flex;
     flex-direction: column;
@@ -76,8 +86,16 @@
     }
 }
 
-.messageDiv{
-    width: 100%;
+.messageDiv {
+  border-radius: 12px;
+  padding: 10px;
+  max-width: 90%;
+  font-size: 14px;
+  position: relative;
+  animation: popIn 0.4s ease-in-out;
+}
+.messageDiv h2 {
+    text-align: center;
 }
 
 #characterMessage{
@@ -115,7 +133,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     height: 50vh;
 }
 
@@ -163,6 +181,11 @@
 .skill-damage {
     font-size: 0.9em;
     color: #f76c6c;
+    margin-bottom: 8px;
+}
+.skill-healing {
+    font-size: 0.9em;
+    color: gold;
     margin-bottom: 8px;
 }
 
@@ -229,6 +252,12 @@
 .danger{
     background-color: red;
 }
+.detailsSection{
+
+    margin-bottom: 20px;
+}
+
+
 
 
 
@@ -297,6 +326,7 @@
  .skill-type{
     font-size: 2.5vw;
 }
+
 
 }
 

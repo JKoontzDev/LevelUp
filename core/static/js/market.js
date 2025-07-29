@@ -1,11 +1,9 @@
-const url = '/dashboard/${username}/ironstead/market/items';
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const username = document.querySelector('meta[name="username"]').content;
 const storedItems = localStorage.getItem('items');
+const url = `/dashboard/${username}/ironstead/market/items`;
+
 const shopkeeper = document.getElementById('shopkeeperText');
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
         const username = document.querySelector('meta[name="username"]').content;
@@ -28,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (storedItems && storedDate === currentDate) {
             items = JSON.parse(storedItems);
-            console.log('Loaded items from localStorage:', items);
+            //console.log('Loaded items from localStorage:', items);
             buttons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     const category = e.target.dataset.category;
@@ -37,11 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } else {
                     // If no data or data is outdated, fetch it
+
         fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken,
+                'X-Custom-User': username
             },
         })
         .then(response => {
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json(); // Parse JSON response
         })
         .then(responseData => {
+            console.log(responseData);
             if (Array.isArray(responseData)) {
                 responseData.forEach(item => {
                     if (item.type == "ingredient") {
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('items', JSON.stringify(items));
             localStorage.setItem('lastFetchedDate', currentDate);
 
-            console.log('Fetched new items:', items);
+            //console.log('Fetched new items:', items);
 
             // Proceed with displaying the items
             buttons.forEach(button => {
@@ -105,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function displayItems(category, items) {
     itemGrid.innerHTML = ''; // Clear the grid
-
     if (items[category].length == 0) {
         const itemElement = document.createElement('div');
         itemElement.className = 'item';
@@ -146,6 +146,8 @@ function displayItems(category, items) {
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken,
+                        'X-Custom-User': username
+
                     },
                     body: JSON.stringify(data),
                 })
@@ -157,7 +159,7 @@ function displayItems(category, items) {
                 })
                 .then(responseData => {
                     //console.log("BELLOW");
-                    //console.log(responseData.message);
+                    console.log(responseData.message);
                     if (responseData.message == "Task completed successfully!") {
                         const itemNameToRemove = responseData.item
                         //console.log(itemNameToRemove)

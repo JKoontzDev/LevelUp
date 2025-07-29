@@ -10,9 +10,9 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="username" content="{{ user.username }}">
   
-  <div class="container1">
+  <div class="container1" data-page="guildHall">
     <div>
-      <section class="quest-board">
+      <section class="quest-board" id="quest-board">
         <h2>Quest Board</h2>
         <div class="tabs">
           <div class="tab active" data-type="kill">Kill</div>
@@ -51,8 +51,8 @@
         </ul>
       </section>
 
-      <!-- Equipment Workshop Section -->
-      <section class="shop">
+
+      <section class="shop" id="guildMaster">
         <div class="guildMasterSection">
             <img src="{% static 'img/guildMaster.jpeg' %}" alt="Guild Master" class="guildMaster">
             <div class="guildMasterText">
@@ -61,7 +61,7 @@
         </div>
         <div class="sectionOne">
           <div>
-              <button class="GMButton" data-target="talk"><strong>Talk</strong></button>
+              <button id="masterChat" class="GMButton" data-target="talk"><strong>Talk</strong></button>
               <button id="rewardsButton" class="GMButton" data-target="rewards"><strong>Rewards</strong></button>
           </div>
 
@@ -81,7 +81,7 @@
     </div>
     
     <aside class="guild-extra">
-      <section class="bulletin">
+      <section class="bulletin" id="bulletin">
         <h2>Bulletin Board</h2>
         <ul>
           {% for i in questBoard %}
@@ -91,7 +91,7 @@
       </section>
       
       <!-- Guild Member Roster & Rankings -->
-      <section class="roster">
+      <section class="roster" id="members">
         <h2>Member Roster</h2>
         {% for i in npc %}
         <ul>

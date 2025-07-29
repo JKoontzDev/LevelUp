@@ -52,9 +52,7 @@ body {
 }
  .profile-card .info .xp-bar div {
      height: 100%;
-     width: 90%;
-    /* Example */
-     background: linear-gradient(to right, #00f260, #0575e6);
+      background: linear-gradient(to right, #00f260, #0575e6);
 }
  .background-animation {
      position: fixed;
@@ -112,7 +110,10 @@ a{
     margin-top: 8vh;
     transition: 1s;
 }
-
+#fillExp{
+    width: 0;
+    transition: width 1s ease-in-out;
+}
 
 
 

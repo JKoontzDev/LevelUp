@@ -1,7 +1,7 @@
 const buttons = document.querySelectorAll('.detail-button');
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const username = document.querySelector('meta[name="username"]').content;
-const url = '/dashboard/${username}/ironstead/training/grab';
+const url = `/dashboard/${username}/ironstead/training/grab`;
 const detailsSection = document.getElementById('detailsSection');
 const playerLevel = document.querySelector('meta[name="level"]').content;
 const weaponSelect = document.getElementById('weapon-select');
@@ -27,6 +27,7 @@ weaponSelect.addEventListener('change', function() {
 
 magicSelect.addEventListener('change', function() {
   const selectedMagic = magicSelect.value;
+
   if (selectedMagic) {
     detailsButtonM.setAttribute('data-action', `${selectedMagic}`);
   } else {
@@ -65,9 +66,15 @@ function addSkillDiv(skill, skillSet) {
 
         // Damage modifier
         const damage = document.createElement('p');
-        damage.textContent = `+${skillSet[0] && skillSet[0].damage_modifier ? skillSet[0].damage_modifier : skill.damage} damage modifier`;
+        damage.textContent = `+${
+          skillSet[0] && skillSet[0].damage_modifier != null
+            ? skillSet[0].damage_modifier.toFixed(1)
+            : skill.damage.toFixed(1)
+        } damage modifier`;
         damage.className = 'skill-damage';
         div.appendChild(damage);
+
+
 
         // Level
         const level = document.createElement('div');
@@ -123,7 +130,11 @@ function addSkillDiv(skill, skillSet) {
             actionButton.disabled = true;
             actionButton.textContent = "Out of motivation";
             actionButton.className = 'action-button disabled';
-        } else {
+        } else if (skillSet[0].efficiency === 10){
+            actionButton.disabled = true;
+            actionButton.textContent = "Maxed Out";
+            actionButton.className = 'action-button disabled';
+        }else {
             actionButton.addEventListener('click', () => {
             sendSkill(`${skill.name}`)
             });
@@ -143,6 +154,8 @@ function addSkillDiv(skill, skillSet) {
         detailsSection.appendChild(div);
     }
     else if (skill.skill_type == "general") {
+        console.log(skill);
+        console.log(skillSet);
         const div = document.createElement('div');
         div.id = `${skill.name}`;
         div.className = 'div-details';
@@ -186,7 +199,7 @@ function addSkillDiv(skill, skillSet) {
         const efficiency = document.createElement('div');
         efficiency.className = 'skill-level';
         const efficiencyText = document.createElement('p');
-        efficiencyText.textContent = `Efficiency: ${skillSet && skillSet.efficiency ? skillSet.efficiency : 0}`;
+        efficiencyText.textContent = `Efficiency: ${skillSet && skillSet[0].efficiency ? skillSet[0].efficiency : 0}`;
         efficiencyText.className = 'level-text';
         efficiencyText.id = 'efficiencyText';
 
@@ -197,10 +210,10 @@ function addSkillDiv(skill, skillSet) {
         eprogressBarContainer.className = 'e-progress-bar-container';
         const eprogressBar = document.createElement('div');
         eprogressBar.className = 'e-progress-bar';
-        eprogressBar.style.width = `${(skillSet && skillSet.efficiency ? skillSet.efficiency : 0) / 10 * 100}%`;
+        console.log(skillSet[0].efficiency);
+        eprogressBar.style.width = `${(skillSet && skillSet[0].efficiency ? skillSet[0].efficiency : 0) / 10 * 100}%`;
         eprogressBarContainer.appendChild(eprogressBar);
         efficiency.appendChild(eprogressBarContainer);
-
         div.appendChild(efficiency);
 
         //learn button
@@ -217,7 +230,11 @@ function addSkillDiv(skill, skillSet) {
             actionButton.disabled = true;
             actionButton.textContent = "Out of motivation";
             actionButton.className = 'action-button disabled';
-        } else {
+        } else if (skillSet[0].efficiency === 10){
+            actionButton.disabled = true;
+            actionButton.textContent = "Maxed Out";
+            actionButton.className = 'action-button disabled';
+        }else {
             actionButton.addEventListener('click', () => {
             sendSkill(`${skill.name}`)
             });
@@ -257,6 +274,15 @@ function addSkillDiv(skill, skillSet) {
         description.className = 'skill-description';
         div.appendChild(description);
 
+         // healing modifier
+        const healing = document.createElement('p');
+        healing.textContent = `+${
+          skillSet[0] && skillSet[0].healing_modifier != null
+            ? skillSet[0].healing_modifier.toFixed(1)
+            : skill.healing.toFixed(1)
+        } healing modifier`;
+        healing.className = 'skill-healing';
+        div.appendChild(healing);
 
         // Level
         const level = document.createElement('div');
@@ -281,7 +307,7 @@ function addSkillDiv(skill, skillSet) {
         const efficiency = document.createElement('div');
         efficiency.className = 'skill-level';
         const efficiencyText = document.createElement('p');
-        efficiencyText.textContent = `Efficiency: ${skillSet && skillSet.efficiency ? skillSet.efficiency : 0}`;
+        efficiencyText.textContent = `Efficiency: ${skillSet && skillSet[0].efficiency ? skillSet[0].efficiency : 0}`;
         efficiencyText.className = 'level-text';
         efficiencyText.id = 'efficiencyText';
 
@@ -292,7 +318,7 @@ function addSkillDiv(skill, skillSet) {
         eprogressBarContainer.className = 'e-progress-bar-container';
         const eprogressBar = document.createElement('div');
         eprogressBar.className = 'e-progress-bar';
-        eprogressBar.style.width = `${(skillSet && skillSet.efficiency ? skillSet.efficiency : 0) / 10 * 100}%`;
+        eprogressBar.style.width = `${(skillSet && skillSet[0].efficiency ? skillSet[0].efficiency : 0) / 10 * 100}%`;
         eprogressBarContainer.appendChild(eprogressBar);
         efficiency.appendChild(eprogressBarContainer);
 
@@ -312,7 +338,11 @@ function addSkillDiv(skill, skillSet) {
             actionButton.disabled = true;
             actionButton.textContent = "Out of motivation";
             actionButton.className = 'action-button disabled';
-        } else {
+        } else if (skillSet[0].efficiency === 10){
+            actionButton.disabled = true;
+            actionButton.textContent = "Maxed Out";
+            actionButton.className = 'action-button disabled';
+        }else {
             actionButton.addEventListener('click', () => {
             sendSkill(`${skill.name}`)
             });
@@ -334,7 +364,6 @@ function addSkillDiv(skill, skillSet) {
 
     }
 }
-
 
 
 function addWeaponDiv(weaponBag, data) {
@@ -360,13 +389,13 @@ function addWeaponDiv(weaponBag, data) {
 
         // Damage modifier
         const damage = document.createElement('p');
-        damage.textContent = `Current Damage: ${weaponBag[0].upgraded_damage}`;
+        damage.textContent = `Damage Modifier: ${weaponBag[0].damage_modifier.toFixed(1)}`;
         damage.className = 'skill-damage';
         div.appendChild(damage);
 
         // efficiency modifier
         const efficiency = document.createElement('p');
-        efficiency.textContent = `Current efficiency: ${weaponBag[0].weapon_efficiency}`;
+        efficiency.textContent = `Current efficiency: ${weaponBag[0].efficiency}`;
         efficiency.id = 'itemEfficiency';
         efficiency.className = 'skill-damage';
         div.appendChild(efficiency);
@@ -451,13 +480,13 @@ function addMagicDiv(magic, magicTome) {
 
         // Damage modifier
         const damage = document.createElement('p');
-        damage.textContent = `Current Damage: ${magic[0].upgraded_damage}`;
+        damage.textContent = `Current Damage: ${magic[0].damage_modifier}`;
         damage.className = 'skill-damage';
         div.appendChild(damage);
 
         // efficiency modifier
         const efficiency = document.createElement('p');
-        efficiency.textContent = `Current efficiency: ${magic[0].spell_efficiency}`;
+        efficiency.textContent = `Current efficiency: ${magic[0].efficiency}`;
         efficiency.id = 'itemEfficiency';
         efficiency.className = 'skill-damage';
         div.appendChild(efficiency);
@@ -483,7 +512,7 @@ function addMagicDiv(magic, magicTome) {
 
         //learn button
         const actionButton = document.createElement('button');
-        actionButton.textContent = 'Practice Weapon';
+        actionButton.textContent = 'Practice Magic';
         actionButton.className = 'action-button';
 
         if (motivation <= 0) {
@@ -521,7 +550,7 @@ function addMagicDiv(magic, magicTome) {
 
 
 
-
+// post
 function sendSkill(message) {
     //console.log(message)
 
@@ -545,8 +574,13 @@ function sendSkill(message) {
     .then(responseData => {
         //console.log(responseData);
         if (responseData.result){
-            const damageMod = responseData.result.damage
+            //get the mods from the response data
+            const damageMod = responseData.result.damage;
+            const healingMod = responseData.result.healing;
+            // query the <p>
             const damage = document.querySelector('.skill-damage');
+            const healing = document.querySelector('.skill-healing');
+
             const Eprogress = document.querySelector('.e-progress-bar');
             const efficiencyText = document.getElementById('efficiencyText');
             const motText = document.getElementById("motText");
@@ -561,7 +595,10 @@ function sendSkill(message) {
             efficiencyText.textContent = `Efficiency: ${responseData.result.efficiency}`
             Eprogress.style.width = `${(responseData.result.efficiency / 10) * 100}%`;
             if (damageMod) {
-                damage.textContent = `+${damageMod} damage modifier`;
+                damage.textContent = `+${damageMod.toFixed(1)} damage modifier`;
+            }
+            else if (healingMod){
+                healing.textContent = `+${healingMod.toFixed(1)} healing modifier`;
             }
         } else {
             const learnButton = document.getElementById('learn-button');
@@ -577,7 +614,7 @@ function sendSkill(message) {
 
 function sendWeapon(data){
     data = {"name": data.name, "trainType": data.trainType}
-    console.log(data);
+    //console.log(data);
     fetch(url, {
         method: 'POST',
         headers: {
@@ -604,12 +641,15 @@ function sendWeapon(data){
             const heathText = document.getElementById("healthText");
             const motText = document.getElementById("motText");
             const itemEfficiency = document.getElementById("itemEfficiency");
+            const damageMod = document.querySelector(".skill-damage");
+
             const actionButton = document.querySelector('.action-button');
             if (responseData.currentMotivation <= 0) {
                 actionButton.disabled = true;
                 actionButton.textContent = "Out of motivation";
                 actionButton.className = 'action-button disabled';
             }
+
             healthText.textContent = `${responseData.currentHealth}/${responseData.maxHealth}`;
             motText.textContent = `${responseData.currentMotivation}/${responseData.maxMotivation}`;
             itemEfficiency.textContent = `Current efficiency: ${responseData.efficiency}`;
@@ -623,6 +663,7 @@ function sendWeapon(data){
 
 function sendMagic(data){
     data = {"name": data.name, "trainType": data.trainType}
+    //alert("YOOOOO")
     console.log(data);
     fetch(url, {
         method: 'POST',
@@ -674,6 +715,9 @@ function sendMagic(data){
 buttons.forEach(button => {
     button.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
+        const category = e.target.dataset.category;
+        const name = e.target
+        console.log(name);
         //console.log(action);
         fetch(url, {
             method: 'GET',
@@ -681,6 +725,7 @@ buttons.forEach(button => {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken,
                 'X-Custom-Message': action,
+                'X-Custom-Category': category,
                 'X-Custom-User': username
             },
         })
@@ -711,8 +756,6 @@ buttons.forEach(button => {
                 const info = responseData.magicTome
                 addMagicDiv(magic, info)
             }
-
-
         })
     })
 })

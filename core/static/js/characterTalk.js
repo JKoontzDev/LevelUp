@@ -1,0 +1,134 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const chatWindow = document.getElementById("chat-window");
+  const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const username = document.querySelector('meta[name="username"]').content;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  const journalBtn = document.getElementById("journal-btn");
+  const journalOverlay = document.getElementById("journal-overlay");
+  const closeJournal = document.getElementById("close-journal");
+  const saveJournal = document.getElementById("save-journal");
+  const fidget = document.getElementById("fidget-spinner");
+  const url = `/dashboard/${username}/npc`;
+
+  sendBtn.addEventListener("click", sendMessage);
+  userInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+
+  journalBtn.addEventListener("click", () => {
+    journalOverlay.style.display = "flex";
+  });
+
+  closeJournal.addEventListener("click", () => {
+    journalOverlay.style.display = "none";
+  });
+
+  saveJournal.addEventListener("click", () => {
+    alert("Journal saved! (Hook this to backend later.)");
+    journalOverlay.style.display = "none";
+  });
+
+  function sendMessage() {
+    const text = userInput.value.trim();
+    if (text === "") return;
+
+    addMessage(text, "user");
+    userInput.value = "";
+
+    // Show typing indicator
+    const typingBubble = document.createElement("div");
+    typingBubble.className = "chat-message ai-message";
+
+    const dots = document.createElement("div");
+    dots.className = "typing-indicator";
+    dots.innerHTML = `
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    `;
+    typingBubble.appendChild(dots);
+
+    chatWindow.appendChild(typingBubble);
+
+
+
+    let data = {"text": text}
+      fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Custom-User': username,
+                'X-Custom-Name': "ME",
+                'X-Custom-Message': text,
+
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json(); // Parse JSON response
+        })
+        .then(responseData => {
+            typingBubble.remove();
+            console.log(responseData)
+            addMessage(responseData.response, 'bot')
+
+        })
+  }
+
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = `chat-message ${sender}-message`;
+    div.textContent = text;
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+
+  // Animate stars background
+  const stars = document.getElementById("stars");
+  for (let i = 0; i < 100; i++) {
+    const star = document.createElement("div");
+    star.style.position = "absolute";
+    star.style.width = "2px";
+    star.style.height = "2px";
+    star.style.background = "#fff";
+    star.style.top = Math.random() * window.innerHeight + "px";
+    star.style.left = Math.random() * window.innerWidth + "px";
+    star.style.opacity = Math.random();
+    stars.appendChild(star);
+  }
+
+  // Fidget spinner interactivity
+  let isDragging = false;
+  let angle = 0;
+  let lastX = 0;
+
+  fidget.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    lastX = e.clientX;
+    fidget.style.cursor = "grabbing";
+  });
+
+  window.addEventListener("mouseup", () => {
+    isDragging = false;
+    fidget.style.cursor = "grab";
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (isDragging) {
+      const delta = e.clientX - lastX;
+      angle += delta * 2;
+      fidget.style.transform = `rotate(${angle}deg)`;
+      lastX = e.clientX;
+    }
+  });
+
+  fidget.addEventListener("click", () => {
+    angle += 360;
+    fidget.style.transform = `rotate(${angle}deg)`;
+  });
+});

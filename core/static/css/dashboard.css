@@ -21,6 +21,17 @@ body {
  .quests-panel h3, .progress-overview h3, .health-tracker h3 {
      margin-bottom: 15px;
 }
+
+.quests-panel{
+    max-height: 30vh;
+    overflow-y: auto;
+
+}
+
+.tasksLink{
+    color: red;
+}
+
  .task {
      display: flex;
      justify-content: space-between;
@@ -112,6 +123,16 @@ body {
     transform: scale(1.1);
 }
 
+#fillHealth {
+  width: 0;
+  transition: width 1s ease-in-out;
+}
+
+#fillMotivation{
+  width: 0;
+  transition: width 1s ease-in-out;
+}
+
 
 
 
@@ -156,10 +177,18 @@ body {
      display: grid;
      grid-template-columns: auto;
      margin: 20px;
+     justify-content: center;
+     align-items: center;
  }
-   .quests-panel, .progress-overview, .health-tracker, .settings, .message-board {
+  .quests-panel, .progress-overview, .health-tracker, .settings, .message-board {
      width: 70vw;
-}
+ }
+ .health-bar, .motivation-bar {
+    width: 100%;
+ }
+ .settingsButton {
+    width: 100%;
+ }
 
 }
 

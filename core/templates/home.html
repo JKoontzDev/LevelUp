@@ -29,30 +29,99 @@
                     <div class="cta-buttons">
                         <a href="{% url 'login' %}" class="primary">Get Started</a>
                         <a href="#features" class="secondary">Learn More</a>
+                        <a href="{% url 'blog_page' %}" class="secondary">Blog</a>
+
                     </div>
                 </div>
             </section>
 
             <section id="features" class="features-section">
-                <h2>Why Choose Us?</h2>
+                <h2>Why Choose LevelUp?</h2>
                 <div class="features">
                     <div class="feature">
                         <h3>Gamified Progress</h3>
-                        <p>Track your habits and goals with an engaging leveling system inspired by your favorite games.</p>
+                        <p>Track habits and goals with a thrilling RPG-inspired leveling system. Slay tasks, gain XP, and
+                            become a legend in both worlds!</p>
                     </div>
                     <div class="feature">
                         <h3>Daily Quests</h3>
-                        <p>Complete meaningful tasks each day to gain experience and unlock new features.</p>
+                        <p>Conquer daily quests to earn XP and unlock awesome features, powering up your real-life skills
+                            and in-game hero!</p>
                     </div>
                     <div class="feature">
-                        <h3>AR Notifications</h3>
-                        <p>Stay immersed with interactive augmented reality features for key reminders and updates.</p>
+                        <h3>Character Development</h3>
+                        <p>Level up in life and in-game! Crush real-world goals to unlock epic in-game rewards—double
+                            the grind, double the glory!</p>
                     </div>
                 </div>
             </section>
 
+            <!-- Testimonials Section -->
+            <section id="testimonials" class="testimonials-section">
+                <h2>What Our Users Say</h2>
+                <div class="testimonials">
+                    {% if testament %}
+                    {% for i in testament %}
+                    <div class="testimonial">
+                        <p>{{i.message}}</p>
+                        <h4>– {{ i.author }}</h4>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="testimonial">
+                        <h4>No testimonials at this time</h4>
+
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section id="how-it-works" class="how-it-works-section">
+                <h2>How LevelUp Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <h3>1. Create Your Account</h3>
+                        <p>Jump straight into the LevelUp world and start improving instantly.</p>
+                    </div>
+                    <div class="step">
+                        <h3>2. Set Real-Life Goals</h3>
+                        <p>Define personal goals, from fitness to productivity, and track them daily.</p>
+                    </div>
+                    <div class="step">
+                        <h3>3. Level Up</h3>
+                        <p>Complete quests, earn XP, and unlock rewards as you grow in-game and in life.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Updated Footer -->
             <footer class="footer">
-                <p>&copy; 2024 Level Up. All rights reserved.</p>
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>LevelUp</h3>
+                        <p>Transform your life with a gamified self-improvement app.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Links</h3>
+                        <ul>
+                            <li><a href="{% url 'login' %}">Get Started</a></li>
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#how-it-works">How It Works</a></li>
+                            <li><a href="{% url 'blog_page' %}">Level Up Blog</a></li>
+
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Contact</h3>
+                        <ul>
+                            <li><a href="mailto:sadfacedigitalsolutions@gmail.com">Email Dev</a></li>
+                            <li><a href="https://discord.gg/uM7f4D9F">Discord</a></li>
+                            <li><a href="https://x.com/CodeRoast1">X</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="footer-bottom">© 2025 LevelUp. All rights reserved. <a href="{% url 'privacyPolicy' %}">Privacy Policy</a> | <a href="{% url 'termsService' %}">Terms of Service</a></p>
             </footer>
         </div>
     </body>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="google-site-verification" content="verification_token">
+        <meta name="author" content="Josh">
+        <meta name="description" content="LevelUp is a self improvement app that allows users to make a character and have goals that they complete in real life. Finishing these goals allows the player to send their character on quests and level up like a video game.">
+        <meta name="keywords" content="self-improvement, game, LevelUp">
+        <meta name="robots" content="index, follow">
+        <meta name="google-site-verification" content="verification_token">
+        <meta http-equiv="Content-Language" content="en">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <title>Adventure</title>
+        {% load static %}
+         <link rel="icon" type="image/png" href="{% static 'img/sword.png' %}">
+        <link rel="stylesheet" href="{% static 'css/adventure.css' %}">
+</head>
+<body>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+    <meta name="currentPlayerHealth" content="{{ character.current_health }}">
+    <meta name="basePlayerHealth" content="{{ character.health }}">
+    <meta name="quest" content="{{ character.current_story_quest }}">
+    <meta name="nextQuest" content="here">
+
+
+
+    <header class="hero">
+        <div class="profile-card">
+            <a href="{% url 'characterPage' username=user.username %}"><img src="{{user.profile_picture.url}}" alt="User Avatar"></a>
+
+        </div>
+        <div>
+
+        </div>
+        <div>
+            {% if user.is_authenticated %}
+            <h3><a href="{% url 'logout' %}">Save quest and logout</a></h3>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="mainContent">
+
+
+        <div class="characterUI hidden" id="playerStats">
+
+        </div>
+
+        <div class="characterUI" id="characterUI">
+            <div class="column">
+                <div class="uiBox" data-name="{{character.character_name}}">
+                  <h2>{{ character.character_name }}</h2>
+                  <div class="health-stat"><span>&#9775;</span><span id="playerHealth" data-number="{{ character.health }}">{{ character.current_health }} / {{ character.health }}</span></div>
+                  <div class="health-bar">
+                    <div class="health-bar-inner" id="playerHealthBar" style="width: {{current_health}}%;"></div>
+                  </div>
+                </div>
+                <!-- Messages under player -->
+                <div class="message-container">
+                    <p class="message" id="playerMessage">No new notifications</p>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <div class="actionScene">
+      <div class="characters" id="characterArea">
+
+
+
+      </div>
+
+      <div class="controls" id="controls">
+          <button id="next-btn" style="display: none;">Next</button>
+
+         <!-- <button id="attBtn" onclick="createEnemyBox([100, 50, 75], ['Orc Warrior', 'Slime', 'Wolf'], 3)">create enemy box/start battle</button>
+        <button id="bloBtn" onclick="">Next</button>
+        <button id="magBtn" onclick="">Health</button>-->
+      </div>
+    </div>
+
+    <script src="{% static 'js/adventure_quest.js' %}"></script>
+
+</body>
+</html>

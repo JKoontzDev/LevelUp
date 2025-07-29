@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-28p2ril)^w%jj*ehdw5kh@fvqkb_ixgxh38&=9lfp&r59!82)*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.50.121', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.50.121', '127.0.0.1', "192.168.1.178", "levelupgame.org", "www.levelupgame.org", "73.40.203.42 "]
 
 
 # Application definition
@@ -120,7 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 # 10 minutes
-SESSION_COOKIE_AGE = 600
+SESSION_COOKIE_AGE = 6000
 
 # session ends when browser closes
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

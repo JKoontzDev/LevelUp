@@ -24,6 +24,8 @@
      padding: 10px 20px;
      cursor: pointer;
      border-radius: 5px;
+     margin-left: 5px;
+     margin-right: 5px;
 }
  .category-btn:hover {
      background: #777;
@@ -31,11 +33,18 @@
  .item-display {
      width: 100%;
      margin-bottom: 60px;
+     overflow-y: auto;
+
+
 }
  .item-grid {
      display: grid;
-     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+     grid-template-columns: auto auto;
      gap: 20px;
+     overflow-y: auto;
+     padding-right: 20px;
+
+
 }
 .item {
   background: linear-gradient(135deg, #333, #555);
@@ -168,7 +177,20 @@
   }
   .item {
     width: auto;
+
+
   }
+  .item-display {
+     grid-template-columns: auto auto;
+     width: 100%;
+  }
+  .item-grid {
+    grid-template-columns: auto auto;
+    width: 100%;
+    place-items: center;
+    padding-right: 0px;
+  }
+
 
 }
 

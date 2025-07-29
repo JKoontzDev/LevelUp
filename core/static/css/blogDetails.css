@@ -1,0 +1,152 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    color: #0a2740;
+    line-height: 1.6;
+}
+
+.wrapper {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
+header {
+    background: linear-gradient(to bottom, #16213e, #0f3460);
+    color: #ffffff;
+    padding: 30px 20px;
+    text-align: center;
+    position: relative;
+}
+
+header h1 {
+    font-family: cursive, sans-serif;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+header nav {
+    margin-top: 10px;
+}
+
+header nav a {
+    color: #ff9800;
+    text-decoration: none;
+    margin: 0 10px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+header nav a:hover {
+    color: #e68900;
+}
+
+/* Search Bar */
+header form {
+    margin-top: 20px;
+}
+
+header input[type="search"] {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 250px;
+    max-width: 80%;
+}
+
+header span {
+    padding: 10px 15px;
+    background-color: #ff9800;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-left: 10px;
+}
+
+header button:hover {
+    background-color: #e68900;
+}
+
+/* Layout */
+.blog-container {
+    max-width: 60vw;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #f4f4f4;
+    background-color: #f9f9f9; /* dark soft background */
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    margin-top: 4vh;
+    flex: 1;
+}
+
+/* Post Card */
+.blog-post {
+    background: linear-gradient(to bottom, #16213e, #0f3460);
+    padding: 2rem;
+    border-radius: 16px;
+}
+
+/* Header */
+.post-header {
+    font-family: cursive, Sans-serif;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.post-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #ffcc70;
+}
+
+.post-meta {
+    font-size: 1.5rem;
+    color: #b0b0c3;
+}
+
+.author {
+    font-weight: 600;
+    color: #f87575;
+}
+
+.date {
+    font-style: italic;
+}
+
+/* Content */
+.post-content {
+    line-height: 1.75;
+    font-size: 1.1rem;
+    color: #f0f0f5;
+    margin-bottom: 2rem;
+}
+
+.post-content p {
+    margin-bottom: 1.2rem;
+}
+
+
+footer {
+    background: linear-gradient(to bottom, #16213e, #0f3460);
+    color: #fff;
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: 60px;
+}
+
+footer p {
+    margin: 0;
+}
+
+footer a {
+    color: white;
+}

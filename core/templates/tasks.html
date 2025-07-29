@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Tasks
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+
+
+    <div class="containerMain">
+        <div class="gridTable">
+            <p class="subtext">Current Tasks</p>
+            <table class="task-table">
+              <thead>
+                <tr>
+                  <th>Task Name</th>
+                  <th>Description</th>
+                  <th>Frequency</th>
+                  <th>Delete</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in tasks %}
+                <tr>
+                  <td >{{ i.quest_name }}</td>
+                  <td class="description">{{ i.description }}</td>
+                  <td>{{ i.frequency }}</td>
+                  <td><button id="{{ i.id }}" class="subButton">Delete</button></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" style="text-align: center;">No tasks found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+
+        <div class="gridFlex">
+            <h1>Level Up Your Day</h1>
+            <p class="subtext">Every task you add is a step closer to your goals.</p>
+            <form id="taskForm" method="POST">
+                {% csrf_token %}
+
+              <label>Task Name</label>
+                {{ form.title }}
+
+              <label>Description</label>
+              {{ form.description}}
+
+              <div class="frequency-group">
+                <label>Frequency:</label>
+                  {{form.frequency}}
+
+              </div>
+
+              <button class="subButton" type="submit">Add Task</button>
+            </form>
+        </div>
+
+    </div>
+    <script src="{% static 'js/tasks.js' %}"></script>
+
+
+
+{% endblock %}

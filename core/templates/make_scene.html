@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Story Scene Generator
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/make_scene.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <h2>Create a Story Scene</h2>
+
+<form method="post" id="sceneForm">
+  {% csrf_token %}
+
+  <label for="id_scene_id">Scene ID:</label>
+  {{ scene_form.scene_id }}
+
+  <div class="char-grid">
+    <div>
+      <label>Character Names (one per line):</label>
+      {{ scene_form.character }}
+    </div>
+    <div>
+      <label>Character URLs (one per line):</label>
+      {{ scene_form.character_url }}
+    </div>
+  </div>
+
+  <h3>Dialogue</h3>
+  <div id="dialogue-container">
+    <!-- JS will populate rows here -->
+  </div>
+  <button type="button" onclick="addDialogueRow()">Add Dialogue Line</button>
+
+  <h3>Enemies (Optional)</h3>
+  <div>
+    <label>List enemy names (one per line):</label>
+    {{ scene_form.enemies }}
+    <small>Enter names as saved in the Enemy model (one per line) MAKE sure to put Enemy in dialogue to target combat</small>
+  </div>
+
+  <h3>Choices</h3>
+  {{ formset.management_form }}
+  <div id="choices-container">
+    {% for form in formset %}
+      <fieldset class="choice-form">
+        {{ form.as_p }}
+        <button type="button" onclick="removeChoice(this)">Remove Choice</button>
+      </fieldset>
+    {% endfor %}
+  </div>
+  <button type="button" onclick="addChoice()">Add Choice</button>
+
+  <!-- Hidden real dialogue textarea -->
+  {{ scene_form.dialogue }}
+
+  <br><br>
+  <button type="submit">Create Scene</button>
+</form>
+
+<style>
+  .char-grid {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .char-grid textarea {
+    width: 100%;
+    height: 100px;
+  }
+  .dialogue-line {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .dialogue-line input {
+    flex: 1;
+  }
+  .choice-form {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+  }
+</style>
+
+<script>
+  const dialogueContainer = document.getElementById("dialogue-container");
+  const hiddenDialogueField = document.getElementById("id_dialogue");
+
+  function addDialogueRow(speaker = "", line = "") {
+    const row = document.createElement("div");
+    row.className = "dialogue-line";
+
+    row.innerHTML = `
+      <input type="text" placeholder="Character" value="${speaker}">
+      <input type="text" placeholder="Dialogue" value="${line}">
+      <button type="button" onclick="this.parentNode.remove()">✖</button>
+    `;
+    dialogueContainer.appendChild(row);
+  }
+
+  function collectDialogueData() {
+    const lines = dialogueContainer.querySelectorAll(".dialogue-line");
+    const dialogueText = Array.from(lines).map(line => {
+      const inputs = line.querySelectorAll("input");
+      const char = inputs[0].value.trim();
+      const text = inputs[1].value.trim();
+      return char && text ? `${char}: ${text}` : "";
+    }).filter(Boolean).join("\n");
+    hiddenDialogueField.value = dialogueText;
+  }
+
+  document.getElementById("sceneForm").addEventListener("submit", function () {
+    collectDialogueData();
+  });
+
+  // === Choice Form Handling ===
+  let choiceIndex = {{ formset.total_form_count }};
+  function addChoice() {
+    const newForm = document.createElement("fieldset");
+    newForm.className = "choice-form";
+    newForm.innerHTML = `
+      <p><label>Choice Text: <input type="text" name="form-${choiceIndex}-text"></label></p>
+      <p><label>Next Scene ID: <input type="text" name="form-${choiceIndex}-next_scene"></label></p>
+      <p><label>Stats Requirement: <input type="text" name="form-${choiceIndex}-stats_requirement"></label></p>
+      <p><label>Inventory Requirement: <input type="text" name="form-${choiceIndex}-inventory_requirement"></label></p>
+      <button type="button" onclick="removeChoice(this)">Remove Choice</button>
+    `;
+    document.getElementById("choices-container").appendChild(newForm);
+
+    // Update management form total count
+    document.getElementById("id_form-TOTAL_FORMS").value = ++choiceIndex;
+  }
+
+  function removeChoice(button) {
+    const fieldset = button.closest("fieldset");
+    fieldset.remove();
+  }
+
+  // Start with one dialogue row
+  addDialogueRow();
+</script>
+
+
+
+
+
+
+
+
+{% endblock %}

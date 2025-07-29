@@ -13,9 +13,9 @@
 
 
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-<main class="main-content">
-    <section class="quests-panel">
-        <h3>Daily Quests</h3>
+<main class="main-content" data-page="dashboard">
+    <section class="quests-panel" id="quest-button">
+        <h3 class="tasksLink"><a href="{% url 'userTasks' username=user.username %}">Daily Quests</a></h3>
         {% if dQuest %}
         {% for quest in dQuest %}
         <div class="task">
@@ -43,7 +43,7 @@
     </section>
     {% endif %}
 
-    <section class="progress-overview">
+    <section class="progress-overview" id="progress-overview">
         <h3>Progress Overview</h3>
         <p>Weekly tasks completed: <span id="weeklyCom">{{user.percent_weekly_completed}}%</span></p>
         <p>Last quest reward:</p>
@@ -61,17 +61,17 @@
         </ul>
     </section>
 
-    <section class="health-tracker">
+    <section class="health-tracker" id="motivation-bar">
         <h3>Health & Motivation</h3>
         <p>HP: {{ character.current_health }}/{{ character.health }}</p>
-        <div title="{{ calcHealth }}%" class="health-bar hover-box"><div id="fillHealth" style="width: {{ calcHealth }}%;"></div></div>
+        <div title="{{ calcHealth }}%" class="health-bar hover-box"><div id="fillHealth" data-health="{{ calcHealth }}"></div></div>
 
         <p>Motivation: {{ character.current_motivation }}/{{ character.motivation }}</p>
-        <div title="{{ calcMotivation }}%" class="motivation-bar hover-box"><div id="fillMotivation" style="width: {{ calcMotivation }}%"></div></div>
+        <div title="{{ calcMotivation }}%" class="motivation-bar hover-box"><div id="fillMotivation" data-mot="{{ calcMotivation }}"></div></div>
 
     </section>
 
-    <section class="quests-panel">
+    <section class="quests-panel" id="town-map-button">
         <h3>World Map</h3>
         {% if questDone %}
                 <a href="{% url 'worldMapPage' username=user.username %}"><div class="task urgent mapButton"><p>Open Map</p></div></a>
@@ -83,15 +83,20 @@
 
     </section>
 
-    <section class="message-board">
+    <section class="message-board" id="message-board">
         <h3>Message Board</h3>
         <p id="messages">No new messages</p>
     </section>
 
 
-    <section class="settings">
+    <section class="settings" id="settings">
         <h3>Settings</h3>
         <a href="{% url 'settings' username=user.username %}"><button class="settingsButton">Go to settings</button></a>
+    </section>
+
+    <section class="settings">
+        <h3>adventure quest</h3>
+        <a href="{% url 'adventureQuests' username=user.username %}"><button class="settingsButton">Go on adventure</button></a>
     </section>
 
 

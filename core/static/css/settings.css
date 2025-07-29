@@ -11,8 +11,10 @@
 
 .gridMain {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: auto auto;
     gap: 6vw;
+    overflow-y: auto;
+    height: 100%;
 }
 
 .gridFlex{
@@ -31,7 +33,7 @@
     margin-left: 0px;
 }
 .formMain{
-    height: 40vh;
+    height: 60vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -56,6 +58,7 @@
     border: 1px solid #00b4d8;
     transition: 3s;
     margin-top: 4vh;
+    margin-bottom: 10px;
 }
 .submitButton:hover{
     transform: scale(1.1);
@@ -122,6 +125,8 @@ input[type="file"] {
   }
   .gridMain{
     grid-template-columns: auto;
+    overflow-x: hidden;
+    width: 100%;
   }
   .submitButton{
     width: auto;
@@ -130,7 +135,20 @@ input[type="file"] {
   .gridFlex{
     width: 40vw;
     margin: 0px;
-}
+ }
+  textarea {
+    width: 100%;
+  }
+  .submitButton {
+    width: 50vw;
+  }
+  .MainDiv{
+    display: grid;
+    grid-template-columns: auto;
+
+    justify-content: center;
+    align-items: center;
+  }
 
 }
 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Level Up – Tech Blog</title>
+  <meta name="description" content="Level Up is a gamified motivation/goal tracker webapp" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://levelupgame.org",
+    "@type": "Blog",
+    "name": "Level Up",
+    "description": "Dev blog for the project Level Up"
+  }
+  </script>
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+</head>
+<body>
+    <!-- HEADER -->
+  <header>
+    <h1>Level Up Dev Blog</h1>
+    <form>
+      <input id="search" type="search" name="q" placeholder="Search the blog..." />
+      <span id="funny">🔍</span>
+    </form>
+    <nav>
+      <a class="ancorButton" href="{% url 'home' %}">Home</a> |
+      <a class="ancorButton" data-tag="all">All</a> |
+      <a class="ancorButton" data-tag="tutorials">Tutorials</a> |
+      <a class="ancorButton" data-tag="Development">Development</a> |
+      <a class="ancorButton" data-tag="upcomingReleases">Upcoming Releases</a> |
+
+
+    </nav>
+  </header>
+  <div class="page-wrapper">
+    <main class="main-content">
+      {% for blog in blogs %}
+      <article data-tag="{{ blog.tags }}" data-title="{{ blog.title }}">
+        <h2><a href="{% url 'blog_detail' blog.slug %}">{{ blog.title }}</a></h2>
+        <p><small>By {{ blog.author }} • <time datetime="{{ blog.created_at }}">{{ blog.updated_at }}</time></small></p>
+        <p>{{ blog.excerpt }}</p>
+      </article>
+      {% endfor %}
+    </main>
+    <script src="{% static 'js/blog.js' %}" ></script>
+
+    <footer class="footer">
+      <p>© 2025 LevelUp. All rights reserved. <a href="{% url 'privacyPolicy' %}">Privacy Policy</a> | <a href="{% url 'termsService' %}">Terms of Service</a></p>
+    </footer>
+  </div>
+</body>
+</html>

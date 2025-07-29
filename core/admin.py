@@ -51,37 +51,19 @@ class RankAdmin(admin.ModelAdmin):
 
 
 class RankDetailsAdmin(admin.ModelAdmin):
-    list_display = ('description', 'special_attack', 'special_attack_damage', 'rank')
+    list_display = ('description', 'attack', 'damage', 'rank')
     search_fields = ('description', 'rank',)
     ordering = ('rank',)
 
     fieldsets = (
         ('description', {'fields': ('rank', 'description',)}),
-        ('attacks', {'fields': ('special_attack', 'special_attack_damage')}),
+        ('attacks', {'fields': ('attack', 'damage')}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('description', 'special_attack', 'special_attack_damage, rank'),
-        }),
-    )
-
-
-
-class DailyQuestAdmin(admin.ModelAdmin):
-    list_display = ('quest_name', 'quest_description', 'experience_points', 'drop_class')
-    search_fields = ('quest_name',)
-    ordering = ('quest_name',)
-
-    fieldsets = (
-        ('quest details', {'fields': ('quest_name', 'quest_description', 'experience_points', 'drop_class')}),
-    )
-
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('quest_name', 'quest_description', 'experience_points', 'drop_class'),
+            'fields': ('description', 'attack', 'damage, rank'),
         }),
     )
 
@@ -120,36 +102,36 @@ class skillsAdmin(admin.ModelAdmin):
 
 
 class armorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'defense', 'resistance', 'forgeable', 'repair_cost')
-    search_fields = ('name', 'crafting_ingredients', 'forgeable')
+    list_display = ('name', 'description', 'defense', 'resistance', 'forgeable', 'repair_cost', 'type', 'url')
+    search_fields = ('name', 'crafting_ingredients', 'forgeable', 'type')
     ordering = ('name',)
     fieldsets = (
-        ('armor details', {'fields': ('name', 'description')}),
-        ('stats', {'fields': ('defense', 'resistance', 'forgeable', 'repair_cost')}),
+        ('armor details', {'fields': ('name', 'description', 'url')}),
+        ('stats', {'fields': ('defense', 'resistance', 'forgeable', 'repair_cost', 'type')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': (
-                'name', 'description', 'defense', 'resistance', 'crafting_ingredients', 'forgeable', 'repair_cost'),
+                'name', 'description', 'defense', 'resistance', 'crafting_ingredients', 'forgeable', 'repair_cost', 'type', 'url'),
         }),
     )
     inlines = [EquipablesIngredientsInline]
 
 
 class weaponAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'damage', 'attack_speed', 'critical_rate', 'forgeable', 'repair_cost')
+    list_display = ('name', 'description', 'damage', 'attack_speed', 'critical_rate', 'forgeable', 'repair_cost', 'url')
     search_fields = ('name', 'crafting_ingredients', 'forgeable')
     ordering = ('name',)
     fieldsets = (
-        ('weapon details', {'fields': ('name', 'description')}),
+        ('weapon details', {'fields': ('name', 'description', 'url')}),
         ('stats', {'fields': ('damage', 'attack_speed', 'critical_rate', 'forgeable', 'repair_cost')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': (
-                'name', 'description', 'damage', 'attack_speed', 'critical_rate', 'crafting_ingredients', 'forgeable', 'repair_cost'),
+                'name', 'description', 'damage', 'attack_speed', 'critical_rate', 'crafting_ingredients', 'forgeable', 'repair_cost', 'url'),
         }),
     )
     inlines = [EquipablesIngredientsInline]
@@ -174,19 +156,19 @@ class magicAdmin(admin.ModelAdmin):
 
 class npcAdmin(admin.ModelAdmin):
     list_display = ('name', 'prompt', 'description', 'party', 'is_traveller', 'occupation', 'alignment', 'location',
-                    'is_alive', 'level', 'image', 'gender', 'race', 'attitude')
-    search_fields = ('name', 'alignment', 'location', 'race')
+                    'is_alive', 'level', 'image', 'gender', 'race', 'attitude', 'dexterity')
+    search_fields = ('name', 'alignment', 'location', 'race', 'dexterity')
     ordering = ('name', )
     fieldsets = (
         ('details', {'fields': ('name', 'prompt', 'description', 'party', 'is_traveller', 'occupation', 'alignment', 'location',
-                    'is_alive', 'level', 'image', 'gender', 'race', 'attitude')}),
+                    'is_alive', 'level', 'image', 'gender', 'race', 'attitude', 'dexterity')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': (
                 'name', 'prompt', 'description', 'party', 'is_traveller', 'occupation', 'alignment', 'location',
-                'is_alive', 'level', 'image', 'gender', 'race', 'attitude'),
+                'is_alive', 'level', 'image', 'gender', 'race', 'attitude', 'dexterity'),
         }),
     )
 
@@ -255,25 +237,115 @@ class npcDialogueAdmin(admin.ModelAdmin):
 
 
 class bugAdmin(admin.ModelAdmin):
-    list_display = ('title', 'details', 'status')
+    list_display = ('title', 'details', 'status', 'workaround')
     search_fields = ('title', 'status')
     ordering = ('title', 'details', 'status')
     fieldsets = (
-        ('details', {'fields': ('title', 'details', 'status')}),)
+        ('details', {'fields': ('title', 'details', 'status', 'workaround')}),)
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('title', 'details', 'status'),
+            'fields': ('title', 'details', 'status', 'workaround'),
         }),
     )
 
+
+class taskAdmin(admin.ModelAdmin):
+    list_display = ('quest_name', 'description', 'experience_points', 'drop_class',
+                    'frequency', 'source', 'creator')
+    search_fields = ('quest_name', 'experience_points', 'drop_class')
+    ordering = ('quest_name', 'frequency')
+    fieldsets = (
+        ('details', {'fields': ('quest_name', 'description', 'experience_points', 'drop_class',
+                    'frequency', 'source', 'creator')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('quest_name', 'description', 'experience_points', 'drop_class',
+                    'frequency', 'source', 'creator'),
+        }),
+    )
+
+
+
+class enemyAdmin(admin.ModelAdmin):
+    list_display = ('enemy_name', 'weapon', 'armor', 'magic', 'base_damage', 'base_armor', 'health', 'is_boss', 'image',
+                    'gold_drop', 'mana', 'level', 'dexterity')
+    search_fields = ('enemy_name', 'is_boss', 'level', 'dexterity')
+    ordering = ('enemy_name', )
+    fieldsets = (
+        ('general', {'fields': ('enemy_name', 'is_boss', 'gold_drop', 'level')}),
+        ('stats', {'fields': ('base_damage', 'base_armor', 'health', 'mana', 'dexterity')}),
+        ('misc', {'fields': ('weapon', 'armor', 'magic', 'image')}),
+
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': (
+                'enemy_name', 'weapon', 'armor', 'magic', 'base_damage', 'base_armor', 'health', 'is_boss', 'image',
+                'gold_drop', 'mana', 'level', 'dexterity'
+            ),
+        }),
+    )
+
+
+class storyGenAdmin(admin.ModelAdmin):
+    list_display = ('scene_id', 'content_json')
+    search_fields = ('scene_id', 'content_json')
+    ordering = ('scene_id', 'content_json')
+    fieldsets = (
+        ('details', {'fields': ('scene_id', 'content_json')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('scene_id', 'content_json'),
+        }),
+    )
+
+
+class fuelMyFireAdmin(admin.ModelAdmin):
+    list_display = ('quote',)
+    search_fields = ('quote',)
+    ordering = ('quote',)
+    fieldsets = (
+        ('details', {'fields': ('quote',)}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('quote',),
+        }),
+    )
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'created_at', 'updated_at')
+    search_fields = ('title', 'content', 'tags')
+    prepopulated_fields = {'slug': ('title',)}
+    list_filter = ('created_at', 'author')
+    ordering = ('-created_at',)
+
+
+
+@admin.register(userTestament)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ('message', 'author',)
+    search_fields = ('message', 'author',)
+    fieldsets = (
+        ('details', {'fields': ('message', 'author',)}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('message', 'author',),
+        }),
+    )
 
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Rank, RankAdmin)
 admin.site.register(RankDetail, RankDetailsAdmin)
-admin.site.register(dailyQuest, DailyQuestAdmin)
 admin.site.register(Item, itemsAdmin)
 admin.site.register(Skill, skillsAdmin)
 admin.site.register(Armor, armorAdmin)
@@ -285,6 +357,14 @@ admin.site.register(bulletinBoardExtra, bulletinBoardAdmin)
 admin.site.register(towns, townsAdmin)
 admin.site.register(NPCDialogueRule, npcDialogueAdmin)
 admin.site.register(BugsModel, bugAdmin)
+admin.site.register(taskModel, taskAdmin)
+admin.site.register(enemies, enemyAdmin)
+admin.site.register(StoryScene, storyGenAdmin)
+admin.site.register(fuelMyFire, fuelMyFireAdmin)
+
+
+
+
 
 
 
