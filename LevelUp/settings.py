@@ -21,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-28p2ril)^w%jj*ehdw5kh@fvqkb_ixgxh38&=9lfp&r59!82)*'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['192.168.50.121', '127.0.0.1', "192.168.1.178", "levelupgame.org", "www.levelupgame.org", "73.40.203.42 "]
+ALLOWED_HOSTS = ['127.0.0.1', "levelupgame.org", "www.levelupgame.org"]
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -77,12 +78,25 @@ WSGI_APPLICATION = 'LevelUp.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+
+if os.getenv("DJANGO_ENV") == "production":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'levelup'),
+            'USER': os.getenv('DB_USER', 'levelupuser'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'strong_password_here'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -116,6 +130,17 @@ USE_I18N = True
 USE_TZ = True
 
 
+# celery
+CELERY_BROKER_URL = 'redis://:your_very_secure_password@127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://:your_very_secure_password@127.0.0.1:6379/0'
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'EST'
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -127,6 +152,15 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # when action it stays on
 SESSION_SAVE_EVERY_REQUEST = True
+
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+
 
 
 STATIC_URL = '/static/'

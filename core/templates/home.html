@@ -18,8 +18,11 @@
         {% load static %}
          <link rel="icon" type="image/png" href="{% static 'img/sword.png' %}">
         <link rel="stylesheet" href="{% static 'css/home.css' %}">
+
     </head>
     <body>
+        <meta name="csrf-token" content="{{ csrf_token }}">
+
         <div class="container">
             <section class="hero">
                 <div class="hero-overlay"></div>
@@ -118,11 +121,15 @@
                             <li><a href="mailto:sadfacedigitalsolutions@gmail.com">Email Dev</a></li>
                             <li><a href="https://discord.gg/uM7f4D9F">Discord</a></li>
                             <li><a href="https://x.com/CodeRoast1">X</a></li>
+                            <li><a id="coffeeLink" href="https://buymeacoffee.com/thewebguru" target="_blank">Buy me a coffee</a></li>
                         </ul>
                     </div>
                 </div>
                 <p class="footer-bottom">© 2025 LevelUp. All rights reserved. <a href="{% url 'privacyPolicy' %}">Privacy Policy</a> | <a href="{% url 'termsService' %}">Terms of Service</a></p>
             </footer>
+            <script src="{% static 'js/cookieBanner.js' %}"></script>
+            <script src="{% static 'js/coffeePanel.js' %}" defer></script>
+
         </div>
     </body>
 </html>

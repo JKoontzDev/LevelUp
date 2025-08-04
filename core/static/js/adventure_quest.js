@@ -4,9 +4,12 @@ const mainContent = document.querySelector('.mainContent');
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const username = document.querySelector('meta[name="username"]').content;
 const url = `/${username}/adventure/quest/api`;
+const endURL = `/${username}/adventure/quest/end/api`
 let currentPlayerHealth = document.querySelector('meta[name="currentPlayerHealth"]').content;
 let currentPlayerHealthBase = document.querySelector('meta[name="currentPlayerHealth"]');
 const basePlayerHealth = document.querySelector('meta[name="basePlayerHealth"]').content;
+const userURL = document.querySelector('meta[name="userURL"]').content;
+
 const characterUI = document.getElementById('characterUI');
 
 //global vars for story
@@ -21,10 +24,11 @@ let choices = [];
 //checks if enemies are present in this scene and if so will start combat
 let enemyScene = false;
 let enemyList = [];
-
+let allEnemiesKilled = []
 let combatEndCallback = null;
 
-
+let returnNewEnemies = [];
+let endRewards = [];
 
 // fetch character details on load up
 fetch(url, {
@@ -106,18 +110,22 @@ async function healthFun(healthFor, amount, isHealing, targetName, index, enemyA
         } else {
             newHealth = (currentPlayerHealth - amount);
         }
-        // send message of ammount taken or healed
+        // send message of amount taken or healed
         if (newHealth > currentPlayerHealth) {
             addMessage(0, `You healed yourself by ${amount}, you feel more energized!`, targetName = 'player', index = 0)
-        } else if (newHealth < 0) {
+        } else if (newHealth <= 0) {
             addMessage(0, `${username} took fatal damage! ${username} has died`, 'player', 0)
-            deadMode(username)
+            setTimeout(() => {
+                deadMode(username)
+            }, 9000);
         } else {
-            addMessage(0, `${targetName} took ${amount} damage!`, targetName, index)
+            addMessage(0, `${username} took ${amount} damage!`, targetName, index)
 
         }
 
         currentPlayerHealth = newHealth;
+        document.querySelector('meta[name="currentPlayerHealth"]').setAttribute('content', newHealth);
+
         //make a percentage
         let newHealthPercentage = (newHealth / playerBaseHealth) * 100;
         //update the UI
@@ -211,6 +219,7 @@ async function createCharacterElement(url, characters) {
           // make div
           const container = document.createElement('div');
           container.classList.add('characterContainer');
+          container.setAttribute("data-character", `${character}`);
           // add img
           const sprite = document.createElement('img');
           sprite.classList.add('characterSprite');
@@ -296,18 +305,28 @@ async function createEnemyBox(enemyHealth, enemyName, numberOfEnemies) {
 
 //REMOVE ENEMY BOX AFTER DEATH
 async function removeEnemyBox(target, name, enemies) {
-    //console.log(name);
+    //console.log(`name:${name}, target: ${target}, enemies: ${enemies}`);
+    allEnemiesKilled.push(name);
     let div = document.getElementById(target);
     setTimeout(() => {
           div.remove();
     }, 2000);
 
-    newEnemies = enemies.filter(item => item !== name);
+    let newEnemies = [...enemies];
+    let indexToRemove = newEnemies.indexOf(name);
+    if (indexToRemove !== -1) {
+        newEnemies.splice(indexToRemove, 1);
+    }
+
+    //newEnemies = enemies.filter(item => item !== name);
+    //console.log(`NEwEnimes length: ${newEnemies.length}`)
+    //console.log(`AllEnemiesKilled: ${allEnemiesKilled}`)
     if (newEnemies.length === 0) {
         alert("You killed all enemies");
         stopCombat();
     }
     //console.log(`ENEMY REMOVED: ${newEnemies}`);
+    returnNewEnemies = newEnemies;
     combatControls(newEnemies);
 
 
@@ -358,7 +377,7 @@ async function combatControls(enemies) {
     finishRoundButton.textContent = "Finish Round";
     finishRoundButton.classList.add("combatButton");
     finishRoundButton.addEventListener('click', () => {
-
+        //console.log(`New enemies foing to finish ${enemies}`)
         finishRound(false, enemies);
     })
 
@@ -899,8 +918,6 @@ async function enemiesTurn(block, enemies) {
     }
     //console.log(enemies);
 
-
-
     const enemyData = await grabInfo("post", "enemyData", enemies);
     const character = await grabInfo("get", "character");
     //console.log(character);
@@ -993,9 +1010,9 @@ async function enemiesTurn(block, enemies) {
                 enemyDexArray.push(dex_speed);
              }
         });
-        //console.log(damageArray);
-        // console.log(weaponSpeedArray);
-        //console.log(`enemy dex: ${enemyDexArray}`);
+        console.log(damageArray);
+         console.log(weaponSpeedArray);
+        console.log(`enemy dex: ${enemyDexArray}`);
 
         //DEX TEST FOR DODGE
         let playerDex = character.character.dexterity;
@@ -1003,21 +1020,25 @@ async function enemiesTurn(block, enemies) {
         character.characterArmor.forEach(item => {
             playerDex = playerDex * item.dexterity;
         })
-
+        console.log(`Dex character: ${playerDex}`);
         // here is the damage applied to player and pass dex
         let passDexArray = [];
         let deal_damage = [];
+        // DEXTERITY CHECK
         for (let i = 0; i < enemyDexArray.length; i++) {
-            if (playerDex > (enemyDexArray[i] * weaponSpeedArray[i])) {
+            const successChance = Math.min(1, playerDex / (enemyDexArray[i] * weaponSpeedArray[i]));
+            console.log(`Success: ${successChance}`);
+            const passed = Math.random() < successChance;
+
+            if (passed) {
                 deal_damage.push(0);
                 passDexArray.push(true);
-            }
-            else{
+            } else {
                 deal_damage.push(damageArray[i]);
                 passDexArray.push(false);
             }
         }
-
+        console.log(`PassDex: ${passDexArray}, deal_damage: ${deal_damage}`)
         // apply damage or alert
         if (deal_damage.length === 0) {
             alert("All enemies missed");
@@ -1025,7 +1046,7 @@ async function enemiesTurn(block, enemies) {
         else {
             //sums up
             let sum = deal_damage.reduce((total, num) => total + num, 0);
-            healthFun(0, sum, false, 'Lydia')
+            healthFun(0, sum, false, username)
             for (let i = 0; i < passDexArray.length; i++) {
                 if (passDexArray[i] === true) {
                     addMessage(1, `${enemies[i]} missed their target!`, targetName=`${enemies[i]}`, index=indexes[i])
@@ -1113,7 +1134,8 @@ async function finishRound(block, enemies) {
                 alert(`You dealt ${nextMove.base_damage} damage to ${enemyNameDamage} and ${nextMove.skill_damage} damage to ${enemyNameSkill}!`);
 
                 await healthFun(1, nextMove.base_damage, 1, targetName=enemyNameDamage, index=numberPartDamage, enemies);
-                await healthFun(1, nextMove.skill_damage, 1, targetName=enemyNameSkill, index=numberPartSkill, enemies);
+                await delay(2000);
+                await healthFun(1, nextMove.skill_damage, 1, targetName=enemyNameSkill, index=numberPartSkill, returnNewEnemies);
                 enemiesTurn(false, enemies);
 
 
@@ -1142,10 +1164,12 @@ function startCombat(enemyHealth, enemyName) {
   return new Promise((resolve) => {
     combatEndCallback = resolve;
     //remove all npcs for combat
-    const characterDiv = document.querySelector('.characterContainer');
-    characterDiv.style.display = 'none';
+    document.querySelectorAll('.characterContainer').forEach(function(element) {
+        element.style.display = 'none'
+    });
+    document.getElementById('characterArea').style.display = 'none';
 
-
+    //console.log(`Enemy Health: ${enemyHealth}, Enemy Name: ${enemyName}, enemyLenmgth: ${enemyName.length}`);
     createEnemyBox(enemyHealth, enemyName, enemyName.length);
   });
 }
@@ -1157,7 +1181,15 @@ async function stopCombat() {
   if (typeof combatEndCallback === "function") {
     combatEndCallback();
     combatEndCallback = null;
-    setTimeout(addNextButton, 3000);
+    const characterArea = document.getElementById('characterArea');
+
+    if (window.innerWidth <= 768) {
+      characterArea.style.display = 'grid';
+    } else {
+      characterArea.style.display = 'grid';
+    }
+
+    setTimeout(addNextButton, 2000);
 
   } else {
     console.warn("stopCombat called but no valid callback");
@@ -1228,12 +1260,13 @@ function addNextButton() {
     nextButton.style.display = 'inline';
     controls.appendChild(nextButton);
     document.getElementById("next-btn").addEventListener("click", showNextDialogueLine);
-    const characterDiv = document.querySelector('.characterContainer');
-    characterDiv.style.display = 'flex';
+    document.querySelectorAll('.characterContainer').forEach(function(element) {
+        element.style.display = 'flex';
+    });
 }
 
 
-//this grabs the first quest, preloads it for JS and goes from ther
+//this grabs the first quest, preloads it for JS and goes from there
 function startQuest() {
     const quest = document.querySelector('meta[name="quest"]').content;
 
@@ -1255,8 +1288,6 @@ function startQuest() {
     })
     .then(responseData => {
         //console.log(responseData);
-
-
         const questCharacter = responseData.quest.content.character;
         const questCharacterURL = responseData.quest.content.characterURL;
         //console.log(responseData.quest.content.dialogue)
@@ -1321,6 +1352,11 @@ async function showNextDialogueLine() {
       const boxCharacterName = box.id.replace("message-", "");
       if (boxCharacterName === characterName) {
         box.textContent = lineText;
+        const container = document.querySelector(`.characterContainer[data-character="${characterName}"]`);
+          if (container) {
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+
       }
     });
   }
@@ -1351,7 +1387,12 @@ function showChoices() {
     btn.onclick = () => {
       // You can replace this with a scene loader or logic router
       alert(`You selected: "${choice.text}" → Next scene: ${choice.next_scene}`);
-      getNextScene(choice.next_scene);
+      if(choice.next_scene == 'end') {
+        endAdventure();
+      } else{
+        getNextScene(choice.next_scene);
+      }
+
     };
     choicesDiv.appendChild(btn);
   });
@@ -1376,7 +1417,7 @@ function getNextScene(next_scene) {
         return response.json(); // Parse JSON response
     })
     .then(responseData => {
-        //console.log(responseData);
+        console.log(responseData);
         //resets enemyScene Not all scenes have enemies
         enemyScene = false;
         enemyList = [];
@@ -1403,7 +1444,17 @@ function getNextScene(next_scene) {
         }
 
         const questCharacter = responseData.quest.content.character;
+        //console.log(questCharacter)
         const questCharacterURL = responseData.quest.content.characterURL;
+
+        // VERY IMPORTANT FOR PAST V1 MVP character chatting with NPCS
+        //for(let i = 0; i <= questCharacter.length; i++) {
+        //    if (questCharacter[i] == "You"){
+        //       questCharacterURL[i] = `${userURL}`;
+        //    }
+        //}
+
+        //console.log(questCharacterURL)
         dialogueLines = responseData.quest.content.dialogue;
         //console.log(dialogueLines)
         //console.log("UP")
@@ -1412,6 +1463,21 @@ function getNextScene(next_scene) {
         //if (responseData)
         currentLineIndex = 0;
 
+
+        //rewards
+        try {
+          let rewardChoice = responseData.quest.content.choices.find(choice => choice.rewards && choice.rewards.item);
+          let rewards = rewardChoice ? rewardChoice.rewards.item : [];
+
+          if (Array.isArray(rewards)) {
+            endRewards.push(...rewards);
+          }
+        } catch (error) {
+          console.error("No rewards:");
+
+        }
+
+
         //console.log(responseData);
         createCharacterElement(questCharacterURL, questCharacter);  // Only sets image now
 
@@ -1419,6 +1485,47 @@ function getNextScene(next_scene) {
     })
 }
 
+
+
+
+//end the adventure
+//We need to tally up all the gold/items as well as the current characters health to make sure it transfers over
+function endAdventure() {
+    alert("Story has ended");
+    // get health
+    const currentHealthForBackend = document.querySelector('meta[name="currentPlayerHealth"]').getAttribute('content');
+
+    console.log(`Current health sent to backend. ${currentHealthForBackend}`);
+    console.log(`enemies sent to backend. ${allEnemiesKilled}`);
+    console.log(`rewards: ${endRewards}`);
+
+    fetch(endURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
+        'X-Custom-User': username
+
+      },
+      body: JSON.stringify({ rewards: endRewards, enemiesKilled: allEnemiesKilled, currentHealth: currentHealthForBackend })
+    })
+    .then(response => response.json())
+    .then(data => {
+      //console.log("Inventory updated:", data);
+      window.location.href = `/dashboard/${character}/`;
+
+    })
+    .catch(error => {
+      console.error("Error sending rewards:", error);
+    });
+
+
+
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 //starts the main quest and adds event listener to progress dialogue
 startQuest()

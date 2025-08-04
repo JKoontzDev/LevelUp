@@ -21,6 +21,13 @@
                     <h2>Change Profile Picture</h2>
                     {{ form.profile_pic }}
                 </div>
+                <!--
+                <div class="gridFlex">
+                    <h2>Change character avatar</h2>
+                    <p class="thankText">This is where you can update your in-game character, types accepted(.png, .jpeg)</p>
+                    {{ form.user_avatar }}
+                </div>
+                -->
                 <div class="gridFlex">
                     <h2>Daily number of quests</h2>
                     <p>Current Number of Quests: {{user.base_number_of_quests}}</p>
@@ -38,7 +45,6 @@
                     <p class="thankText">Please provide constructive feedback to help me enhance my work.
                         Highlight what you appreciate and suggest specific additions or improvements to make LevelUp more fun and engaging!</p>
                     {{ form.improvements }}
-
                 </div>
             </div>
             <button class="submitButton" type="submit">Submit</button>

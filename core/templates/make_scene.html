@@ -13,9 +13,13 @@
 
 <form method="post" id="sceneForm">
   {% csrf_token %}
+  <div class="sceneID">
+    <label for="id_scene_id">Scene ID:</label>
+    {{ scene_form.scene_id }}
+    <p># What is scene ID? Scene ID is the name that the backend uses to fetch the new scene. </p>
+    <p># It is good to make this ID easy to read and follow along with a similar naming scheme to make dev work easier.</p>
+  </div>
 
-  <label for="id_scene_id">Scene ID:</label>
-  {{ scene_form.scene_id }}
 
   <div class="char-grid">
     <div>
@@ -59,31 +63,6 @@
   <br><br>
   <button type="submit">Create Scene</button>
 </form>
-
-<style>
-  .char-grid {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-  .char-grid textarea {
-    width: 100%;
-    height: 100px;
-  }
-  .dialogue-line {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .dialogue-line input {
-    flex: 1;
-  }
-  .choice-form {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin: 10px 0;
-  }
-</style>
 
 <script>
   const dialogueContainer = document.getElementById("dialogue-container");

@@ -17,6 +17,9 @@ def user_directory_path(instance, filename):
     return f"profile_pics/{instance.id}/{filename}"
 
 
+def character_avatar_directory_path(instance, filename):
+    return f"profile_pics/{instance.id}/character_avatar/{filename}"
+
 def NPC_directory_path(instance, filename):
     return f"npc_pics/{instance.id}/{filename}"
 
@@ -27,6 +30,7 @@ def weapon_directory_path(instance, filename):
 
 def armor_directory_path(instance, filename):
     return f"armor_pics/{instance.id}/{filename}"
+
 
 def validate_file_type(file):
     allowed_types = ['image/jpeg', 'image/png']
@@ -39,8 +43,6 @@ def validate_file_size(file):
     max_size = 5 * 1024 * 1024
     if file.size > max_size:
         raise ValidationError("File too large. Size should not exceed 5 MB.")
-
-
 
 
 #  MODELS
@@ -134,6 +136,7 @@ class Magic(models.Model):
     damage = models.IntegerField()
     healing = models.IntegerField()
     special = models.CharField(max_length=100, null=True, blank=True)
+
     def __str__(self):
         return f"Magic: {self.name}"
 
@@ -197,9 +200,9 @@ class skillSet(models.Model):
     skill = models.ForeignKey('Skill', on_delete=models.CASCADE, null=True, blank=True)
     damage_modifier = models.FloatField(default=0, null=True, blank=True)
     healing_modifier = models.FloatField(default=0, null=True, blank=True)
-    efficiency = models.FloatField(default=0, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True, blank=True)
+    efficiency = models.FloatField(default=0, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True,
+                                   blank=True)
     dexterity = models.FloatField(null=True, blank=True)
-
 
     def __str__(self):
         return f"{self.character} x {self.skill}"
@@ -221,7 +224,8 @@ class magicTome(models.Model):
     damage_modifier = models.FloatField(default=0)
     healing_modifier = models.FloatField(default=0)
     dexterity = models.FloatField(null=True, blank=True)
-    efficiency = models.FloatField(default=1.00, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True, blank=True)
+    efficiency = models.FloatField(default=1.00, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True,
+                                   blank=True)
 
 
 class WeaponBag(models.Model):
@@ -230,7 +234,8 @@ class WeaponBag(models.Model):
     current_durability = models.IntegerField(default=1)
     current_level = models.IntegerField(default=1)
     damage_modifier = models.FloatField(default=0, null=True, blank=True)
-    efficiency = models.FloatField(default=1.00, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True, blank=True)
+    efficiency = models.FloatField(default=1.00, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True,
+                                   blank=True)
     standby_weapon = models.BooleanField(default=False)
     current_equip = models.BooleanField(default=False)
 
@@ -249,12 +254,15 @@ class ArmorBag(models.Model):
     efficiency = models.FloatField(default=0, null=True, blank=True)
     current_equip = models.BooleanField(default=False)
     standby_armor = models.BooleanField(default=False)
+
     def __str__(self):
         return f"{self.current_durability} x {self.armor.name} (owned by {self.character.character_name})"
 
 
 class Character(models.Model):
     character_name = models.CharField(max_length=50)
+    story_avatar = models.ImageField(upload_to=character_avatar_directory_path, default="default_avatar.png",
+                                     validators=[validate_file_type, validate_file_size])
     skills = models.ManyToManyField(
         Skill,
         through='skillSet',
@@ -296,7 +304,7 @@ class Character(models.Model):
         blank=True
     )
     health = models.IntegerField(default=10)
-    dexterity = models.FloatField(null=True, blank=True, default=1)
+    dexterity = models.FloatField(null=True, blank=True, default=0.5)
     current_health = models.IntegerField(default=10)
     motivation = models.IntegerField(default=4, validators=[MinValueValidator(0), MaxValueValidator(100)])
     current_motivation = models.IntegerField(default=2)
@@ -344,6 +352,9 @@ class CustomUser(AbstractUser):
     profile_picture = models.ImageField(upload_to=user_directory_path, default="default_avatar.png",
                                         validators=[validate_file_type, validate_file_size])
     completed_tutorial = models.BooleanField(default=False)
+    donated = models.BooleanField(default=False)
+    subscription = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.username
@@ -450,7 +461,6 @@ class NPCS(models.Model):
     race = models.CharField(max_length=10, choices=RACE_CHOICES, null=True, blank=True)
     attitude = models.CharField(max_length=1000, null=True, blank=True)
     dexterity = models.FloatField(null=True, blank=True, default=1)
-
 
     def __str__(self):
         return self.name
@@ -594,6 +604,8 @@ class enemies(models.Model):
         choices=DropClass.choices,
         default=DropClass.COMMON
     )
+
+    @sync_to_async
     def get_drops(self):
         drops = []
         items = Item.objects.filter(drop_class=self.drop_class)
@@ -658,7 +670,7 @@ class towns(models.Model):
         return f"{self.name} ({self.region})"
 
 
- # fuel my fire
+# fuel my fire
 class fuelMyFire(models.Model):
     quote = models.CharField(unique=True, max_length=2000)
 

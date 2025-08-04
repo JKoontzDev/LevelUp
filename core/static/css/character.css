@@ -5,6 +5,30 @@
     flex-direction: column;
 }
 
+.equipItem{
+    border-radius: 10px;
+    background: #555;
+    border: none;
+    color: white;
+    cursor: pointer;
+    height: 7vh;
+}
+
+.details{
+    border-radius: 10px;
+    background: #555;
+    border: none;
+    color: white;
+    cursor: pointer;
+    height: 7vh;
+}
+
+.talkButton {
+    display: none;
+    font-size: 14px;
+  }
+
+
 .navagation{
     margin-bottom: 20px;
     margin-top: -20px;
@@ -18,6 +42,8 @@
      border-radius: 5px;
      margin: 10px;
      transition: 3s;
+     font-size: 14px;
+
 }
 .navButton:hover{
     background-color: #0056b3;
@@ -108,6 +134,9 @@
   .container {
     max-width: 1024px;
   }
+  .talkButton {
+    display: none;
+  }
 }
 
 /* lg */
@@ -141,6 +170,10 @@
   }
   .pfpPic {
     display: none;
+  }
+  .talkButton {
+    display: block;
+    font-size: 14px;
   }
 
 }

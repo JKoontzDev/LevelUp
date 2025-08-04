@@ -8,6 +8,7 @@ from django.conf import settings
 urlpatterns = [
     path('home/', views.homePage, name='home'),
     path('', views.homePage, name='home'),
+    path('api/redeem/', views.collect_email, name='collect_email'),
     path('privacy/policy', views.privacyPolicy, name='privacyPolicy'),
     path('terms/service', views.termsService, name='termsService'),
     path('dashboard/<str:username>/', views.dashboardPage, name='dashboard'),
@@ -46,6 +47,7 @@ urlpatterns = [
     #  adventure quests
     path('<str:username>/adventure/quest/', views.adventureQuests, name='adventureQuests'),
     path('<str:username>/adventure/quest/api', views.adventureQuestsAPI, name='adventureQuestsAPI'),
+    path('<str:username>/adventure/quest/end/api', views.adventureQuestEndAPI, name='adventureQuestEndAPI'),
     path('<str:username>/adventure/quest/story/gen', views.adventureQuestsStoryGen, name='adventureQuestsStoryGen'),
 
     #dead screen

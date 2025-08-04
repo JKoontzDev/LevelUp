@@ -78,16 +78,32 @@ body {
      border: none;
      border-radius: 5px;
      cursor: pointer;
-     animation: bounce 1s infinite;
+     animation: smoothBounce 1s infinite;
 }
- @keyframes bounce {
-     0%, 100% {
-         transform: translateY(0);
-    }
-     50% {
-         transform: translateY(-10px);
-    }
+
+ /* No zoom? */
+input:focus, textarea:focus, select:focus {
+    zoom: 1;
 }
+
+@keyframes smoothBounce {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  30% {
+    transform: translateY(-10px);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+
  .challenge-btn:hover {
      background: #00f260;
 }

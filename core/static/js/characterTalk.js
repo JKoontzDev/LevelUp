@@ -16,18 +16,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter") sendMessage();
   });
 
-  journalBtn.addEventListener("click", () => {
-    journalOverlay.style.display = "flex";
-  });
+  //journalBtn.addEventListener("click", () => {
+  //  journalOverlay.style.display = "flex";
+  //});
 
-  closeJournal.addEventListener("click", () => {
-    journalOverlay.style.display = "none";
-  });
+ // closeJournal.addEventListener("click", () => {
+  //  journalOverlay.style.display = "none";
+ // });
 
-  saveJournal.addEventListener("click", () => {
-    alert("Journal saved! (Hook this to backend later.)");
-    journalOverlay.style.display = "none";
-  });
+  //saveJournal.addEventListener("click", () => {
+  //  alert("Journal saved! (Hook this to backend later.)");
+ //   journalOverlay.style.display = "none";
+  //});
 
   function sendMessage() {
     const text = userInput.value.trim();
@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
     addMessage(text, "user");
     userInput.value = "";
 
-    // Show typing indicator
     const typingBubble = document.createElement("div");
     typingBubble.className = "chat-message ai-message";
 
@@ -90,45 +89,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Animate stars background
   const stars = document.getElementById("stars");
-  for (let i = 0; i < 100; i++) {
-    const star = document.createElement("div");
-    star.style.position = "absolute";
-    star.style.width = "2px";
-    star.style.height = "2px";
-    star.style.background = "#fff";
-    star.style.top = Math.random() * window.innerHeight + "px";
-    star.style.left = Math.random() * window.innerWidth + "px";
-    star.style.opacity = Math.random();
-    stars.appendChild(star);
-  }
 
-  // Fidget spinner interactivity
+for (let i = 0; i < 100; i++) {
+  const star = document.createElement("div");
+  star.style.position = "absolute";
+  star.style.width = "4px";
+  star.style.height = "4px";
+  star.style.background = "#fff";
+  star.style.borderRadius = "50%";
+  star.style.top = Math.random() * window.innerHeight + "px";
+  star.style.left = Math.random() * window.innerWidth + "px";
+  star.style.opacity = Math.random();
+
+  const duration = 3 + Math.random() * 5; // 3–8s
+  const delay = Math.random() * 5;
+
+  star.style.animation = `float ${duration}s ease-in-out ${delay}s infinite alternate`;
+
+  stars.appendChild(star);
+}
+
+
   let isDragging = false;
   let angle = 0;
   let lastX = 0;
 
-  fidget.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    lastX = e.clientX;
-    fidget.style.cursor = "grabbing";
-  });
 
-  window.addEventListener("mouseup", () => {
-    isDragging = false;
-    fidget.style.cursor = "grab";
-  });
-
-  window.addEventListener("mousemove", (e) => {
-    if (isDragging) {
-      const delta = e.clientX - lastX;
-      angle += delta * 2;
-      fidget.style.transform = `rotate(${angle}deg)`;
-      lastX = e.clientX;
-    }
-  });
-
-  fidget.addEventListener("click", () => {
-    angle += 360;
-    fidget.style.transform = `rotate(${angle}deg)`;
-  });
 });

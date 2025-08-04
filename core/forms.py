@@ -6,6 +6,11 @@ from core.models import CustomUser, enemies
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    privacy_check = forms.BooleanField(
+        label="I agree to the Privacy Policy",
+        required=True,
+        error_messages={'required': 'You must agree to the Privacy Policy to register.'}
+    )
 
     class Meta:
         model = CustomUser
@@ -33,6 +38,16 @@ class CustomUserCreationForm(UserCreationForm):
         })
 
 
+class RedeemEmailForm(forms.Form):
+    email = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Enter email used with Buy Me a Coffee to redeem',
+            'class': 'form-control'
+        }),
+        required=True
+    )
+
 
 class loginForm(forms.Form):
     username = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={
@@ -46,6 +61,7 @@ class loginForm(forms.Form):
 class settingsForm(forms.Form):
     number_of_quests = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'placeholder': 'Enter your goal'}))
     profile_pic = forms.ImageField(required=False)
+    user_avatar = forms.ImageField(required=False)
     problem_report = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 5, 'placeholder': 'Please describe the bug in detail, including steps to reproduce it.'}),
         max_length=1000,
@@ -109,4 +125,9 @@ class ChoiceForm(forms.Form):
         required=False,
         label="Inventory Requirement (comma-separated)",
         help_text="e.g. gold_coin,sword"
+    )
+    reward = forms.CharField(
+        required=False,
+        label="Reward (comma-separated)",
+        help_text="e.g. gold_coin,item"
     )

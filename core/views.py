@@ -3,20 +3,22 @@ from django.shortcuts import render, redirect, get_object_or_404
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
-
+from django.core.cache import cache
 from .forms import *
 #from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.forms import formset_factory
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.serializers import serialize
 from django.urls import reverse
 from django.db.models import Q
+from django.db import transaction
 from asgiref.sync import sync_to_async
 from core.models import *
 from django.http import JsonResponse, HttpResponseBadRequest
 import json
 import random
+from uuid import uuid4
 #from django.db.models import F
 #from datetime import datetime
 import pillow_heif
@@ -27,6 +29,10 @@ import httpx
 import asyncio
 from collections import defaultdict
 
+
+
+ollama_warmed_up = False
+ollama_lock = asyncio.Lock()
 
 
 @sync_to_async(thread_sensitive=True)
@@ -171,6 +177,36 @@ def addItemToBag(itemToAdd, username):
     if not created:
         backpack_item.quantity += 1
         backpack_item.save()
+    return 1
+
+
+@sync_to_async
+def bulkAddItemToBag(itemListToAdd, username):
+    user = CustomUser.objects.get(username=username)
+    character = user.character
+
+    # Separate integers and strings
+    item_ids = [drop for drop in itemListToAdd if isinstance(drop, int)]
+    name_list_drops = [drop for drop in itemListToAdd if isinstance(drop, str)]
+
+    # Get all matching Item objects
+    items = list(Item.objects.filter(id__in=item_ids)) + list(Item.objects.filter(name__in=name_list_drops))
+
+    # Create a dict to map both name and ID to the actual Item
+    items_dict = {}
+    for item in items:
+        items_dict[item.id] = item
+        items_dict[item.name] = item
+
+    # Loop through the original drops and update backpack
+    for drop in itemListToAdd:
+        item = items_dict.get(drop)
+        if item:
+            backpack_item, created = BackpackItem.objects.get_or_create(character=character, item=item)
+            if not created:
+                backpack_item.quantity += 1
+                backpack_item.save()
+
     return 1
 
 
@@ -420,8 +456,40 @@ def practiceMagic(magic, magic_tome, character, type):
 def load_serial(type):
     Json = json.loads(serialize('json', type))
     Data = [item['fields'] for item in Json]
-    print(Data)
+    #print(Data)
     return Data
+
+
+def handle_user_avatar_upload(user, user_avatar):
+    file = user_avatar.name
+    ext = os.path.splitext(file)[1].lower()
+    if ext not in ['.png', '.jpg', '.jpeg']:
+        raise ValidationError("Only PNG and JPEG formats are allowed for avatars.")
+
+    try:
+        image = Image.open(user_avatar)
+        image.verify()
+        user_avatar.seek(0)
+        image = Image.open(user_avatar)
+
+        if image.format not in ['PNG', 'JPEG']:
+            raise ValidationError("Image content is not valid PNG or JPEG.")
+
+    except Exception as e:
+        raise ValidationError("Invalid image file.")
+
+    filename = get_valid_filename(file)
+    filename = f"{uuid4().hex}_{filename}"
+    output_dir = os.path.join(MEDIA_ROOT, f"story_avatars/{user.id}")
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_path = os.path.join(output_dir, filename)
+
+    with open(output_path, 'wb+') as destination:
+        for chunk in user_avatar.chunks():
+            destination.write(chunk)
+
+    return os.path.join(f"story_avatars/{user.id}", filename)
 
 
 @sync_to_async
@@ -526,7 +594,7 @@ def get_armor_equip(character_id, adventureQuest):
 
     result = list(queryset)
     armor_data_list = []
-    print(result)
+    #print(result)
     for item in result:
         armor_data = {
             "id": item.id,
@@ -720,7 +788,7 @@ def getEnemyData(enemy):
 
 @sync_to_async
 def forgeableFun(armors, weapons, backpack):
-    print(backpack)
+    #print(backpack)
     forgeables = []
     for item in weapons + armors:
         item_type = 'weapon' if isinstance(item, Weapon) else 'armor'
@@ -738,46 +806,78 @@ def forgeableFun(armors, weapons, backpack):
     return forgeables
 
 
-npc_chat_locks = defaultdict(lambda: asyncio.Semaphore(1))
+npc_chat_locks = {}
 
-
-async def get_npc_response(user_id, npc_name, player_input):
+async def get_npc_response(request, user_id, npc_name, player_input):
     key = f"{user_id}:{npc_name}"
-    semaphore = npc_chat_locks[key]
-    async with semaphore:
-        try:
-            model = "phi3"
 
-            # Fetch NPC instance (prefer aget for async efficiency)
+    # Get or create semaphore for the current loop
+    loop = asyncio.get_event_loop()
+    if key not in npc_chat_locks or npc_chat_locks[key][0] != loop:
+        npc_chat_locks[key] = (loop, asyncio.Semaphore(1))
+
+    semaphore = npc_chat_locks[key][1]
+
+    async with semaphore:
+        model = "llama3"
+        try:
+            # Retrieve chat history from session
+            session_history = request.session.get("npc_chat_history", {})
+            chat_history = session_history.get(key, [])
+
+            # Get system prompt
             if npc_name == "ME":
                 npc = await NPCS.objects.aget(name="ME")
-                prompt = npc.prompt
+                system_prompt = npc.prompt
             else:
                 npc = await sync_to_async(NPCS.objects.get)(name=npc_name)
-                prompt = await npc.generate_prompt(player_input)
-                #print(prompt)
-            # Avoid calling API if loop is shutting down
-            loop = asyncio.get_event_loop()
-            if loop.is_closed():
-                return f"{npc_name} is unavailable right now."
+                system_prompt = await npc.generate_prompt(player_input)
 
-            async with httpx.AsyncClient(timeout=httpx.Timeout(15.0)) as client:
+            # Add system message only once
+            if not any(msg["role"] == "system" for msg in chat_history):
+                chat_history.insert(0, {
+                    "role": "system",
+                    "content": system_prompt
+                })
+
+            # Add user message
+            chat_history.append({
+                "role": "user",
+                "content": player_input
+            })
+
+            # Call Ollama
+            async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
                 response = await client.post(
-                    "http://localhost:11434/api/generate",
-                    json={"model": model, "prompt": prompt}
+                    "http://localhost:11434/api/chat",
+                    json={
+                        "model": model,
+                        "messages": chat_history,
+                        "stream": False
+                    }
                 )
                 response.raise_for_status()
+                result = response.json()
+                npc_reply = result.get("message", {}).get("content", "").strip()
 
-                npc_reply = ""
-                for line in response.text.splitlines():
-                    if line:
-                        try:
-                            data = json.loads(line)
-                            npc_reply += data.get("response", "")
-                        except json.JSONDecodeError:
-                            continue
-                #print(npc_reply)
-                return npc_reply.strip() if npc_reply else "NPC stays silent..."
+            # Add assistant response
+            if npc_name == "ME":
+                chat_history.append({
+                    "role": "assistant",
+                    "content": npc_reply
+                })
+            else:
+                chat_history.append({
+                    "role": f"{npc_name}",
+                    "content": npc_reply
+                })
+
+            # Store back in session
+            session_history[key] = chat_history[-30:]  # Trim for safety
+            request.session["npc_chat_history"] = session_history
+            request.session.modified = True
+
+            return npc_reply or "NPC stays silent..."
 
         except asyncio.CancelledError:
             return f"{npc_name} didn't finish their thought..."
@@ -787,6 +887,9 @@ async def get_npc_response(user_id, npc_name, player_input):
             return f"Error talking to {npc_name}"
         except Exception as e:
             return f"Unexpected error: {str(e)}"
+
+
+
 
 
 @sync_to_async
@@ -811,10 +914,42 @@ def get_available_choices(scene_json, character):
 
 @sync_to_async
 def getQuestGold(gold, character):
-    print(f"GOLD: {gold}; character gold:{character.gold}")
+    #print(f"GOLD: {gold}; character gold:{character.gold}")
     character.gold = character.gold + gold
     character.save()
 
+
+@sync_to_async
+def equipItem(characterID, item):
+    try:
+        #print(f"Equip attempt for character {characterID} and item '{item}'")
+
+        item_weapon = Weapon.objects.get(name=item)
+        WeaponBag.objects.filter(character_id=characterID, current_equip=True).update(current_equip=False)
+
+        weapon_bag = WeaponBag.objects.filter(character_id=characterID, weapon_id=item_weapon.id).first()
+        if weapon_bag:
+            weapon_bag.current_equip = True
+            weapon_bag.save()
+            return f"equip successful: {item_weapon.name}"
+        else:
+            return "Weapon not in bag"
+
+    except Weapon.DoesNotExist:
+        try:
+            item_armor = Armor.objects.get(name=item)
+            ArmorBag.objects.filter(character_id=characterID, current_equip=True).update(current_equip=False)
+
+            armor_bag = ArmorBag.objects.filter(character_id=characterID, armor_id=item_armor.id).first()
+            if armor_bag:
+                armor_bag.current_equip = True
+                armor_bag.save()
+                return f"equip successful: {item_armor.name}"
+            else:
+                return "armor not in bag"
+
+        except Armor.DoesNotExist:
+            return "equip failed (item not found)"
 
 
 
@@ -822,7 +957,27 @@ def getQuestGold(gold, character):
 
 def homePage(request):
     testaments = userTestament.objects.all()[:3]
-    return render(request, "home.html", {"testament": testaments})
+    form = RedeemEmailForm()
+    return render(request, "home.html", {"testament": testaments, "form": form})
+
+
+def collect_email(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = str(data.get('email'))
+
+            if email:
+                WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
+                message = {
+                    "content": f"🔔🧙 New donation redeem reported in LevelUp: {email}",
+                    "username": "LevelUp Bot"
+                }
+                requests.post(WEBHOOK_URL, json=message)
+                return JsonResponse({'message': 'Email received'})
+            return JsonResponse({'error': 'Invalid email'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
 
 
 def privacyPolicy(request):
@@ -854,29 +1009,33 @@ async def loginPage(request):
             reg_form = CustomUserCreationForm(request.POST)
             login_form = loginForm()
             valid = await sync_to_async(reg_form.is_valid)()
-            if valid:
-                print("asd")
-                username = reg_form.cleaned_data['username']
-                password = reg_form.cleaned_data['password1']
-                user = await sync_to_async(CustomUser.objects.create_user)(username=username, password=password)
-                check = await sync_to_async(authenticate)(request, username=username, password=password)
-                print(user)
-                if check is not None:
-                    await sync_to_async(login)(request, user)
-                    rank = await Rank.objects.aget(name="Weak")
-                    user1 = await CustomUser.objects.aget(username=username)
-                    print("New character")
-                    new_character = await Character.objects.acreate(character_name=username)
-                    character = await Character.objects.aget(character_name=username)
-                    character.rank = rank
-                    user1.character = new_character
-                    await sync_to_async(user1.save)()
-                    await sync_to_async(character.save)()
-                    return redirect('dashboard', username=username)
+            ToS_Check = reg_form.cleaned_data.get('privacy_check')
+            if ToS_Check:
+                if valid:
+                    #print("asd")
+                    username = reg_form.cleaned_data['username']
+                    password = reg_form.cleaned_data['password1']
+                    user = await sync_to_async(CustomUser.objects.create_user)(username=username, password=password)
+                    check = await sync_to_async(authenticate)(request, username=username, password=password)
+                    #print(user)
+                    if check is not None:
+                        await sync_to_async(login)(request, user)
+                        rank = await Rank.objects.aget(name="Weak")
+                        user1 = await CustomUser.objects.aget(username=username)
+                        #print("New character")
+                        new_character = await Character.objects.acreate(character_name=username)
+                        character = await Character.objects.aget(character_name=username)
+                        character.rank = rank
+                        user1.character = new_character
+                        await sync_to_async(user1.save)()
+                        await sync_to_async(character.save)()
+                        return redirect('dashboard', username=username)
+                else:
+                    reg_form.add_error(None, "Registration failed. Please check your inputs.")
+                return render(request, "login.html", {'form': login_form, 'reg': reg_form})
             else:
-                reg_form.add_error(None, "Registration failed. Please check your inputs.")
-            return render(request, "login.html", {'form': login_form, 'reg': reg_form})
-
+                reg_form.add_error(None, "ToS and Privacy Policy must be accepted")
+                return render(request, "login.html", {'form': login_form, 'reg': reg_form})
     else:
         context = {
             'form': loginForm(),
@@ -887,6 +1046,8 @@ async def loginPage(request):
 
 @login_required
 def logoutPage(request):
+    request.session.pop("npc_chat_history", None)
+    request.session.modified = True
     logout(request)
     return redirect('home')
 
@@ -1105,7 +1266,7 @@ async def userTasks(request, username):
                     experience_points=4,
                     source="user"
                 )
-                print(f"Task Created: {task_name}, {description}, {frequency}")
+                #print(f"Task Created: {task_name}, {description}, {frequency}")
 
                 return redirect("dashboard", username=user.username)
     else:
@@ -1122,14 +1283,21 @@ async def characterPage(request, username):
     if username != current_user:
         return redirect(reverse('dashboard', kwargs={'username': current_user}))
     user, character = await get_user_character(username)
-    backpack = await get_backpack_data(character.id, "character")
-    spellBook = await get_magic_data(character.id)
-    weapons = await get_weapons_equip(character.id, False)
-    armors = await get_armor_equip(character.id, False)
-    skillset = await get_skills_data(character.id, False)
-    return render(request, "character.html", {"user": user, "character": character, "backpack": backpack,
-                                              "spellBook": spellBook, "skillSet": skillset, "armors": armors,
-                                              "weapons": weapons})
+    if request.method == "GET":
+        backpack = await get_backpack_data(character.id, "character")
+        spellBook = await get_magic_data(character.id)
+        weapons = await get_weapons_equip(character.id, False)
+        armors = await get_armor_equip(character.id, False)
+        skillset = await get_skills_data(character.id, False)
+        return render(request, "character.html", {"user": user, "character": character, "backpack": backpack,
+                                                  "spellBook": spellBook, "skillSet": skillset, "armors": armors,
+                                                  "weapons": weapons})
+    elif request.method == "POST":
+        data = json.loads(request.body.decode('utf-8'))
+        item = data.get('item')
+        message = await equipItem(character.id, item)
+        if message:
+            return JsonResponse({'message': message})
 
 
 @login_required
@@ -1138,6 +1306,22 @@ async def characterTalk(request, username):
     if username != current_user:
         return redirect(reverse('dashboard', kwargs={'username': current_user}))
     user, character = await get_user_character(username)
+
+    async def warm_up_ai():
+        try:
+            print("warm up")
+            async with httpx.AsyncClient(timeout=30) as client:
+                await client.post("http://localhost:11434/api/chat", json={
+                    "model": "llama3",
+                    "prompt": "Warm Up",
+                    "stream": False
+                })
+        except httpx.HTTPError:
+            pass
+
+    if not cache.get("model_warmed"):
+        asyncio.create_task(warm_up_ai())
+        cache.set("model_warmed", True, timeout=3600)  # fire and forget, set cache for easy returning
     return render(request, "characterTalk.html", {'user': user})
 
 
@@ -1235,7 +1419,7 @@ async def blackSmithFetch(request, username):
                 return JsonResponse({'message': 'Forge', "items": backpack, "forgeables": forgeables}, status=200)
         elif message == "repair":
             items = [item async for item in character.weapons.all()] + [item async for item in character.armor.all()]
-            print(items)
+            #print(items)
             item_data = []
 
             for item in items:
@@ -1256,7 +1440,7 @@ async def blackSmithFetch(request, username):
                     "max_durability": item.max_durability,
                     "current_durability": current_durability,
                 })
-                print(item_data)
+                #print(item_data)
 
             return JsonResponse({'message': "Repair", 'items': item_data}, status=200)
         elif message == "upgrade":
@@ -1331,12 +1515,12 @@ async def blackSmithFetch(request, username):
 
             if weapon_exists:
                 result = await addWeapon(itemName, character)
-                print(result)
+                #print(result)
                 return result
 
             elif armor_exists:
                 result = await addArmor(itemName, character)
-                print(result)
+                #print(result)
                 return result
 
         elif message == "repair":
@@ -1420,7 +1604,7 @@ async def blackSmithFetch(request, username):
                     item = await BackpackItem.objects.aget(item_id=ingredient.item_id, character_id=character.id)
                     #print(ingredient)
                     if item:
-                        print(item.quantity)
+                        #print(item.quantity)
                         if item.quantity - (ingredient.quantity - 1) < 0:
                             item_name = await Item.objects.aget(id=ingredient.item_id)
                             return JsonResponse({'message': f"Missing or insufficient quantity for {item_name}"})
@@ -1641,6 +1825,8 @@ async def ironsteadGuildHall(request, username):
 
     tutorial = user.completed_tutorial
 
+
+
     return render(request, "guildHall.html", {'user': user, "character": character, "questBoard": guildQuests,
                                               "npc": locationNPC, 'bbmessage': bulletinBoardMessages, "tutorial": tutorial})
 
@@ -1724,6 +1910,7 @@ async def guildHallAPI(request, username):
 async def npc_chat_api(request, username):
     userName = request.headers.get('X-Custom-User')
     current_user = userName
+
     if username != current_user:
         return redirect(reverse('dashboard', kwargs={'username': current_user}))
 
@@ -1731,11 +1918,15 @@ async def npc_chat_api(request, username):
 
     npc_name = request.headers.get("X-Custom-Name")
     player_message = request.headers.get("X-Custom-Message")
-    if npc_name == int:
-        npc_name = await sync_to_async(NPCS.objects.get)(id=npc_name)
-    #print(f"NPC name is {npc_name}")
-    #print(f"player message is {player_message}")
-    response = await get_npc_response(user_id, npc_name, player_message)
+
+    if npc_name and npc_name.isdigit():
+        npc_obj = await sync_to_async(NPCS.objects.get)(id=int(npc_name))
+        npc_name = npc_obj.name
+
+    if not player_message:
+        return JsonResponse({"response": "No message received."}, status=400)
+
+    response = await get_npc_response(request, user_id, npc_name, player_message)
     return JsonResponse({"response": response})
 
 
@@ -1752,6 +1943,7 @@ async def settings(request, username):
         profile_pic = request.FILES.get('profile_pic')
         bug = request.POST.get('problem_report')
         improvements = request.POST.get('improvements')
+        #userAvatar = request.POST.get('user_avatar')
         if number_of_questss:
             is_valid_settings = await sync_to_async(form.is_valid)()
             if is_valid_settings:
@@ -1766,9 +1958,9 @@ async def settings(request, username):
             file = profile_pic.name
             jpeg_filename = file.replace(".heic", ".jpeg").replace(".HEIC", ".jpeg")
             output_path = os.path.join(MEDIA_ROOT, f"profile_pics/{user.id}", jpeg_filename)
-            print("FILES RECEIVED:", request.FILES)
+            #print("FILES RECEIVED:", request.FILES)
             if file.lower().endswith(".heic"):
-                print("YES")
+                #print("YES")
                 heif_image = pillow_heif.read_heif(profile_pic)
                 image = Image.frombytes(
                     heif_image.mode,
@@ -1802,11 +1994,12 @@ async def settings(request, username):
             }
             requests.post(WEBHOOK_URL, json=message)
             return redirect("dashboard", username=username)
-    #heif_file = pillow_heif.read_heif("/Users/sadface/Desktop/LevelUp/core/static/img/IMG_1972.HEIC")
-    #image = Image.frombytes(heif_file.mode, heif_file.size, heif_file.data)
-    #image.show()
-    return render(request, "settings.html", {'user': user, 'character': character, "form": form})
 
+
+
+
+
+    return render(request, "settings.html", {'user': user, 'character': character, "form": form})
 
 
 @login_required
@@ -1816,7 +2009,7 @@ async def adventureQuests(request, username):
         return redirect(reverse('dashboard', kwargs={'username': current_user}))
     # above is user check
     user, character = await get_user_character(username)
-    # above is grab character/user  #LEFT OFF WITH GETTING ARMOR AND WEAPON TO HTML
+    # above is grab character/user
     current_health = (character.current_health / character.health) * 100
 
     return render(request, "adventure_quest.html", {'user': user, 'character': character, 'current_health': current_health,
@@ -1873,7 +2066,7 @@ async def adventureQuestsAPI(request, username):
         userName = request.headers.get('X-Custom-User')
         if message == 'finishRoundValues':
             data = json.loads(request.body.decode('utf-8'))
-            print(data)
+            #print(data)
 
             # get the skill and id => get the skillSet for perks => get the data
             # if no Skill set to null
@@ -1916,6 +2109,70 @@ async def adventureQuestsAPI(request, username):
 
 
 @login_required
+@require_POST
+async def adventureQuestEndAPI(request, username):
+    current_user = await sync_to_async(lambda: request.user.username)()
+    if username != current_user:
+        return redirect(reverse('dashboard', kwargs={'username': current_user}))
+    user, character = await get_user_character(username)
+    if request.method == "POST":
+        data = json.loads(request.body.decode('utf-8'))
+        enemy_list = data.get('enemiesKilled')
+        rewards = data.get('rewards')
+        newHealth = data.get('currentHealth')
+        if enemy_list:
+            all_item_drops = []
+            gold_drop_total = 0
+
+            # Fetch all enemies in one query
+            enemy_queryset = await sync_to_async(
+                lambda: list(enemies.objects.filter(enemy_name__in=enemy_list))
+            )()
+            enemy_dict = {enemy.enemy_name: enemy for enemy in enemy_queryset}
+
+            for enemy_name in enemy_list:
+                enemy = enemy_dict.get(enemy_name)
+                if not enemy:
+                    continue
+
+                gold_drop_total += enemy.gold_drop
+                item_drops = await enemy.get_drops()
+                all_item_drops.extend(item_drops)
+            #print(f"all_item_drops: {all_item_drops}")
+            # Add all items at once
+            await bulkAddItemToBag(all_item_drops, user.username)
+            #print(f"Enemy drop gold: {gold_drop_total}")
+            # Add gold and save character
+            character.gold += gold_drop_total
+            await character.asave()
+        if rewards:
+            #print(f"rewards: {rewards}")
+            # Extract gold amounts
+            gold_amounts = [int(item.split()[0]) for item in rewards if 'gold' in item.lower()]
+            total_gold = 0
+            for amount in gold_amounts:
+                total_gold = total_gold + amount
+
+            character.gold = character.gold + total_gold
+            # Filter out all non-gold items
+            item_rewards = [item for item in rewards if 'gold' not in item.lower()]
+            await bulkAddItemToBag(item_rewards, user.username)
+
+            #print(f"gold_amounts: {gold_amounts}")
+            #print(f"item_rewards: {item_rewards}")
+            await character.asave()
+
+
+        #print(f"NewHealth: {newHealth}")
+        character.current_health = newHealth
+        character.current_story_quest = None
+        await character.asave()
+
+        return JsonResponse({'message': "good"})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@login_required
 def adventureQuestsStoryGen(request, username):
     ChoiceFormSet = formset_factory(ChoiceForm, extra=3)  # Show 3 blank choices by default
 
@@ -1953,7 +2210,9 @@ def adventureQuestsStoryGen(request, username):
                 next_scene = form.cleaned_data.get("next_scene")
                 stats_req = form.cleaned_data.get("stats_requirement", "")
                 inv_req = form.cleaned_data.get("inventory_requirement", "")
+                reward = form.cleaned_data.get("reward", "")
                 requirements = {}
+                rewards = {}
 
                 if stats_req:
                     try:
@@ -1966,6 +2225,10 @@ def adventureQuestsStoryGen(request, username):
                     items = [i.strip() for i in inv_req.split(",") if i.strip()]
                     requirements["inventory"] = items
 
+                if reward:
+                    items = [i.strip() for i in reward.split(",") if i.strip()]
+                    rewards["item"] = items
+
                 choice_data = {
                     "text": text,
                     "next_scene": next_scene,
@@ -1973,6 +2236,9 @@ def adventureQuestsStoryGen(request, username):
 
                 if requirements:
                     choice_data["requirements"] = requirements
+
+                if rewards:
+                    choice_data["rewards"] = rewards
 
                 choices.append(choice_data)  # <-- all inside loop
 
@@ -1982,7 +2248,7 @@ def adventureQuestsStoryGen(request, username):
                 if not name.strip():
                     continue
                 try:
-                    print(name)
+                    #print(name)
                     enemy = enemies.objects.get(enemy_name=name.strip())
                     enemies_data.append(enemy.enemy_name)
                 except enemies.DoesNotExist:
@@ -2046,7 +2312,7 @@ def fuel_My_Fire(request):
             return JsonResponse({'quote': 'Nothing to fuel your fire… yet!'})
         return JsonResponse({'quote': obj.quote})
     except Exception as e:
-        print("Error in fuel_my_fire:", e)
+        #print("Error in fuel_my_fire:", e)
         return HttpResponseBadRequest(f"Bad request: {e}")
 
 

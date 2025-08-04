@@ -105,6 +105,25 @@ header button:hover {
   }
 }
 
+.xp-bar{
+    display: none;
+}
+.challenge-btn {
+    display: none;
+}
+
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(
+      calc(-10px + 20px * var(--rand-x, 0.5)),
+      calc(-10px + 20px * var(--rand-y, 0.5))
+    );
+  }
+}
 
 
 @keyframes bounce {
@@ -199,4 +218,67 @@ header button:hover {
   cursor: grab;
   z-index: 5;
   transition: transform 0.3s;
+}
+
+
+
+/* 2xl */
+@media (max-width: 1536px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* xl */
+@media (max-width: 1280px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+/* lg */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 768px;
+  }
+
+
+}
+
+/* md */
+@media (max-width: 768px) {
+  .container {
+    max-width: 640px;
+  }
+   .chat-container {
+      position: relative;
+      z-index: 1;
+      width: auto;
+      margin: 80px auto;
+      background: rgba(30, 30, 30, 0.91);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
+
+}
+
+/* sm */
+@media (max-width: 640px) {
+  .container {
+    max-width: 475px;
+  }
+
+
+
+ }
+
+/* xs */
+@media (max-width: 475px) {
+  .container {
+    width: 100%;
+  }
+
+
+
 }

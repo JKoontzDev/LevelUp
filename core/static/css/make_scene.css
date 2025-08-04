@@ -1,0 +1,31 @@
+.sceneID{
+    margin-bottom: 10vh;
+
+}
+.sceneID p {
+    color: rgba(255,255,255,0.6);
+}
+
+
+.char-grid {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .char-grid textarea {
+    width: 100%;
+    height: 100px;
+  }
+  .dialogue-line {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .dialogue-line input {
+    flex: 1;
+  }
+  .choice-form {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+  }
