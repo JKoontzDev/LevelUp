@@ -1,61 +1,58 @@
-# Python
+# === Python ===
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.so
 *.egg-info/
 *.log
-*.sqlite3
-db.sqlite3
-.env
-*.env
 
-# Django
+# === Django ===
+*.sqlite3
 *.db
+db.sqlite3
 *.pot
 *.pyc
-*.pyo
-*.pyd
 *.cover
 *.cache
 *.mo
-*.swp
-*.swo
 *.pid
 *.tar.gz
 *.zip
 local_settings.py
 *.secret
-.envrc
-.idea/
-.vscode/
 staticfiles/
 media/
 
-# Flask
-instance/
+# === Environment Files ===
 .env
+*.env
+.envrc
 
-# Vue.js
-node_modules/
-dist/
-*.log
-*.cache
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.map
+# === Editor / IDEs ===
+.idea/
+.vscode/
 
-# Rust
-target/
-Cargo.lock
-
-# General
+# === Temporary / System Files ===
 .DS_Store
 *.bak
 *.tmp
 *.swp
 Thumbs.db
 
-# Virtual environments
+# === Virtual Environments ===
 venv/
-.env/
+env/
+.venv/
+ENV/
+ENV/
+
+# === Frontend (if applicable) ===
+node_modules/
+dist/
+*.map
+
+# === Rust (if applicable) ===
+target/
+Cargo.lock
+

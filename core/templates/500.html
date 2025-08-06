@@ -15,7 +15,11 @@
         <h1>500</h1>
         <p>By the Seven Gods, an Arcane Catastrophe!</p>
         <p>The mystic energies have destabilized our sacred archives.</p>
-        <a href="{% url 'dashboard' username=user.username %}" class="btn">Cast Return Spell</a>
+	{% if user.is_authenticated and user.username %}
+    	<a href="{% url 'dashboard' username=user.username %}" class="btn">Cast Return Spell</a>
+	{% else %}
+    	<a href="{% url 'home' %}" class="btn">Return to Safety</a>
+	{% endif %}
     </div>
 </body>
 </html>

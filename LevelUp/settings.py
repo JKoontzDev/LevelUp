@@ -12,21 +12,23 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+env = environ.Env()
+environ.Env.read_env()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', "levelupgame.org", "www.levelupgame.org"]
+ALLOWED_HOSTS = ['127.0.0.1', "levelupgame.org", "www.levelupgame.org", "localhost", "147.182.183.76"]
 
 
 # Application definition
@@ -53,7 +55,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'LevelUp.urls'
-LOGIN_URL = '/login/'
+LOGIN_URL = '/'
 
 
 TEMPLATES = [
@@ -79,13 +81,13 @@ WSGI_APPLICATION = 'LevelUp.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 
-if os.getenv("DJANGO_ENV") == "production":
+if os.getenv("DJANGO_ENV", 'production') == "production":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME', 'levelup'),
-            'USER': os.getenv('DB_USER', 'levelupuser'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'strong_password_here'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD'),
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
         }
@@ -123,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'EST'
+TIME_ZONE = 'America/New_York'
 
 USE_I18N = True
 
@@ -131,8 +133,8 @@ USE_TZ = True
 
 
 # celery
-CELERY_BROKER_URL = 'redis://:your_very_secure_password@127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://:your_very_secure_password@127.0.0.1:6379/0'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -155,7 +157,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -165,7 +167,8 @@ SECURE_HSTS_PRELOAD = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'

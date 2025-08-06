@@ -819,7 +819,7 @@ async def get_npc_response(request, user_id, npc_name, player_input):
     semaphore = npc_chat_locks[key][1]
 
     async with semaphore:
-        model = "llama3"
+        model = "gemma:2b"
         try:
             # Retrieve chat history from session
             session_history = request.session.get("npc_chat_history", {})
@@ -849,7 +849,7 @@ async def get_npc_response(request, user_id, npc_name, player_input):
             # Call Ollama
             async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
                 response = await client.post(
-                    "http://localhost:11434/api/chat",
+                    "http://127.0.0.1:11434/api/chat",
                     json={
                         "model": model,
                         "messages": chat_history,
@@ -1020,7 +1020,7 @@ async def loginPage(request):
                     #print(user)
                     if check is not None:
                         await sync_to_async(login)(request, user)
-                        rank = await Rank.objects.aget(name="Weak")
+                        rank = await Rank.objects.aget(name="Greenhorn")
                         user1 = await CustomUser.objects.aget(username=username)
                         #print("New character")
                         new_character = await Character.objects.acreate(character_name=username)
