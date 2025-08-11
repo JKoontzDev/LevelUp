@@ -128,6 +128,7 @@ header button:hover {
     font-size: 1.1rem;
     color: #f0f0f5;
     margin-bottom: 2rem;
+    white-space: pre-wrap;
 }
 
 .post-content p {
