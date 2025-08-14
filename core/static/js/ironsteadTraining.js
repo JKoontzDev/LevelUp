@@ -736,7 +736,7 @@ buttons.forEach(button => {
         return response.json(); // Parse JSON response
         })
         .then(responseData => {
-            console.log(responseData);
+            //console.log(responseData);
             detailsSection.textContent = '';
             window.scrollTo({
               top: document.body.scrollHeight,

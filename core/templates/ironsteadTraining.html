@@ -76,7 +76,11 @@
                 <div class="stat-item">
                     <h5 class="skill-header">{{ skill.name }}</h5>
                     <p class="skill-type">Skill type: {{ skill.skill_type }}</p>
+                    {% if skill.skill_type == "utility" %}
+                    <button data-action="{{skill.name}}" class="detail-button slash-disabled" disabled>Details</button>
+                    {% else %}
                     <button data-action="{{skill.name}}" class="detail-button">Details</button>
+                    {% endif %}
                 </div>
                 {% endfor %}
                 {% endif %}
