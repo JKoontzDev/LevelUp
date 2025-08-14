@@ -70,9 +70,9 @@ class RankDetailsAdmin(admin.ModelAdmin):
 
 
 class itemsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'drop_class', 'price', 'type', 'drop_rate', 'marketable', 'market_drop_rate', 'forgeIngredient')
-    search_fields = ('name', 'type', 'marketable', 'forgeIngredient')
-    ordering = ('name', 'type', 'marketable', 'forgeIngredient')
+    list_display = ('id', 'name', 'description', 'drop_class', 'price', 'type', 'drop_rate', 'marketable', 'market_drop_rate', 'forgeIngredient')
+    search_fields = ('id', 'name', 'type', 'marketable', 'forgeIngredient')
+    ordering = ('id', 'name', 'type', 'marketable', 'forgeIngredient')
     fieldsets = (
         ('item details', {'fields': ('name', 'description', 'drop_class', 'price', 'marketable', 'market_drop_rate', 'forgeIngredient')}),
         ('stats', {'fields': ('type', 'drop_rate')}),

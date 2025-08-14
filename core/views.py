@@ -889,9 +889,6 @@ async def get_npc_response(request, user_id, npc_name, player_input):
             return f"Unexpected error: {str(e)}"
 
 
-
-
-
 @sync_to_async
 def get_available_choices(scene_json, character):
     available = []
@@ -952,9 +949,8 @@ def equipItem(characterID, item):
             return "equip failed (item not found)"
 
 
-
-# routes
-
+# START OF PHYSICAL ROUTES
+# NO LOGIN REQUIRED ROUTES
 def homePage(request):
     testaments = userTestament.objects.all()[:3]
     form = RedeemEmailForm()
@@ -1044,6 +1040,25 @@ async def loginPage(request):
     return render(request, "login.html", context)
 
 
+# blog
+def blogView(request):
+    query = request.GET.get('q')
+    if query:
+        posts = BlogPost.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__icontains=query)
+        )
+    else:
+        posts = BlogPost.objects.all()
+    return render(request, "blog.html", {"blogs": posts})
+
+
+def blog_detail(request, slug):
+    post = get_object_or_404(BlogPost, slug=slug)
+    return render(request, 'blogDetail.html', {'post': post})
+
+
 @login_required
 def logoutPage(request):
     request.session.pop("npc_chat_history", None)
@@ -1052,6 +1067,7 @@ def logoutPage(request):
     return redirect('home')
 
 
+# LOGIN REQUIRED ROUTES
 @login_required
 async def dashboardPage(requests, username):
     current_user = await sync_to_async(lambda: requests.user.username)()
@@ -1309,7 +1325,7 @@ async def characterTalk(request, username):
 
     async def warm_up_ai():
         try:
-            print("warm up")
+            #print("warm up")
             async with httpx.AsyncClient(timeout=30) as client:
                 await client.post("http://localhost:11434/api/chat", json={
                     "model": "llama3",
@@ -1325,6 +1341,7 @@ async def characterTalk(request, username):
     return render(request, "characterTalk.html", {'user': user})
 
 
+# MAP AREAS
 @login_required
 async def worldMapPage(request, username):
     current_user = await sync_to_async(lambda: request.user.username)()
@@ -1334,6 +1351,25 @@ async def worldMapPage(request, username):
     return render(request, "worldMap.html", {"character": character})
 
 
+# IRONSTEAD IS PART OF FREE VERSION
+@login_required
+def ironsteadPage(request, username):
+    current_user = request.user.username
+    if username != current_user:
+        return redirect(reverse('dashboard', kwargs={'username': current_user}))
+    return render(request, "ironstead.html")
+
+
+# SUB REQUIRED STORMWATCH
+@login_required
+def stormwatchPage(request, username):
+    current_user = request.user.username
+    if username != current_user:
+        return redirect(reverse('dashboard', kwargs={'username': current_user}))
+    return render(request, "stormwatch.html")
+
+
+# IRONSTEAD ROUTES(MAY BE ABLE TO REUSE SOME ROUTES)
 @login_required
 async def marketView(request, username):
     current_user = await sync_to_async(lambda: request.user.username)()
@@ -1620,22 +1656,6 @@ async def blackSmithFetch(request, username):
                 return JsonResponse({'message': "Armor upgraded"}, status=200)
 
 
-# may not need
-@login_required
-def healthMotivation(request, username):
-    return JsonResponse({'message': "Hi"})
-
-
-# may not need
-
-@login_required
-def ironsteadPage(request, username):
-    current_user = request.user.username
-    if username != current_user:
-        return redirect(reverse('dashboard', kwargs={'username': current_user}))
-    return render(request, "ironstead.html")
-
-
 @login_required
 async def trainingView(request, username):
     current_user = await sync_to_async(lambda: request.user.username)()
@@ -1907,6 +1927,75 @@ async def guildHallAPI(request, username):
 
 
 @login_required
+async def ironsteadLogging(request, username):
+    current_user = await sync_to_async(lambda: request.user.username)()
+    if username != current_user:
+        return redirect(reverse('dashboard', kwargs={'username': current_user}))
+    user, character = await get_user_character(current_user)
+
+    if request.method == "POST":
+        data = json.loads(request.body.decode('utf-8'))
+        wood_amount = data.get('wood')
+        rare_wood = data.get('rare')
+        time = data.get('time')
+        # below adds the new efficiency
+        skillset = await skillSet.objects.aget(character_id=character.id, skill_id=5) #change in prod to wood cutting Id
+        await asyncio.to_thread(skillset.upgradeWoodCutting, time)
+        # below adds wood to inventory
+        #print(f"Wood:{wood_amount}, Rare:{rare_wood}")
+        if wood_amount:
+            backpack_item, created = await BackpackItem.objects.aget_or_create(
+                character=character,
+                item_id=19, # change in prod to item_id
+            )
+            if not created:
+                backpack_item.quantity += wood_amount
+                await backpack_item.asave()
+        if rare_wood:
+            backpack_item, created = await BackpackItem.objects.aget_or_create(
+                character=character,
+                item_id=28, # change in prod to item_id
+            )
+            if not created:
+                backpack_item.quantity += rare_wood
+                await backpack_item.asave()
+        return JsonResponse({"message": "good"})
+
+    elif request.method == "GET":
+        message = request.headers.get('X-Custom-Message')
+        if message == 'inventory':
+            try:
+                wood = await BackpackItem.objects.aget(character_id=character.id, item_id=19)
+            except BackpackItem.DoesNotExist:
+                wood = 0
+
+            try:
+                rare = await BackpackItem.objects.aget(character_id=character.id, item_id=28)
+            except BackpackItem.DoesNotExist:
+                rare = 0
+            return JsonResponse({
+                "wood": wood.quantity if wood else 0,
+                "rare": rare.quantity if rare else 0
+            })
+        else:
+            wood_skill = await Skill.objects.aget(name="Wood Cutting")
+            skill = await sync_to_async(skillSet.objects.filter(skill_id=5, character_id=character.id).first)() # change in prod
+            return render(request, "ironsteadLogging.html", {"user": user, "character": character, "skill": skill, "woodSkill": wood_skill})
+
+
+#START OF STORMWATCH ROUTES(SUB REQUIRED)
+
+@login_required
+async def swAlchemist(request, username):
+    current_user = await sync_to_async(lambda: request.user.username)()
+    if username != current_user:
+        return redirect(reverse('dashboard', kwargs={'username': current_user}))
+    user, character = await get_user_character(username)
+    return render(request, 'swAlchemist.html', {'user': user, "character": character})
+
+
+# IMPORTANT GLOBAL API FOR NPC CHATTING
+@login_required
 async def npc_chat_api(request, username):
     userName = request.headers.get('X-Custom-User')
     current_user = userName
@@ -1930,78 +2019,7 @@ async def npc_chat_api(request, username):
     return JsonResponse({"response": response})
 
 
-@login_required
-async def settings(request, username):
-    current_user = await sync_to_async(lambda: request.user.username)()
-    if username != current_user:
-        return redirect(reverse('dashboard', kwargs={'username': current_user}))
-
-    user, character = await get_user_character(username)
-    form = settingsForm(request.POST, request.FILES)
-    if request.method == "POST":
-        number_of_questss = request.POST.get('number_of_quests')
-        profile_pic = request.FILES.get('profile_pic')
-        bug = request.POST.get('problem_report')
-        improvements = request.POST.get('improvements')
-        #userAvatar = request.POST.get('user_avatar')
-        if number_of_questss:
-            is_valid_settings = await sync_to_async(form.is_valid)()
-            if is_valid_settings:
-                user.base_number_of_quests = number_of_questss
-                user.weekly_quests_count = (int(number_of_questss) * 7)
-                user.target_num_quests = (int(number_of_questss) / 2)
-                await sync_to_async(user.save)()
-                return redirect("dashboard", username=username)
-            else:
-                return redirect('settings', username=username)
-        if profile_pic:
-            file = profile_pic.name
-            jpeg_filename = file.replace(".heic", ".jpeg").replace(".HEIC", ".jpeg")
-            output_path = os.path.join(MEDIA_ROOT, f"profile_pics/{user.id}", jpeg_filename)
-            #print("FILES RECEIVED:", request.FILES)
-            if file.lower().endswith(".heic"):
-                #print("YES")
-                heif_image = pillow_heif.read_heif(profile_pic)
-                image = Image.frombytes(
-                    heif_image.mode,
-                    heif_image.size,
-                    heif_image.data,
-                    "raw",
-                    heif_image.mode,
-                    heif_image.stride,
-                )
-                image.save(output_path, "JPEG", quality=85)
-                relative_path = os.path.join(f"profile_pics/{user.id}", jpeg_filename)
-                user.profile_picture = relative_path
-            else:
-                user.profile_picture = profile_pic
-
-            await sync_to_async(user.save)()
-            return redirect("dashboard", username=username)
-        if bug:
-            WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
-            message = {
-                "content": f"🔔 New bug reported in LevelUp: {bug}",
-                "username": "LevelUp Bot"
-            }
-            requests.post(WEBHOOK_URL, json=message)
-            return redirect("dashboard", username=username)
-        if improvements:
-            WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
-            message = {
-                "content": f"🔔 New improvement reported in LevelUp: {improvements}",
-                "username": "LevelUp Bot"
-            }
-            requests.post(WEBHOOK_URL, json=message)
-            return redirect("dashboard", username=username)
-
-
-
-
-
-    return render(request, "settings.html", {'user': user, 'character': character, "form": form})
-
-
+# ADVENTURE QUESTS FOR LEVELUP(should be globally used)
 @login_required
 async def adventureQuests(request, username):
     current_user = await sync_to_async(lambda: request.user.username)()
@@ -2286,6 +2304,74 @@ def adventureQuestsStoryGen(request, username):
     })
 
 
+# MISC ROUTES FOR LEVELUP
+@login_required
+async def settings(request, username):
+    current_user = await sync_to_async(lambda: request.user.username)()
+    if username != current_user:
+        return redirect(reverse('dashboard', kwargs={'username': current_user}))
+
+    user, character = await get_user_character(username)
+    form = settingsForm(request.POST, request.FILES)
+    if request.method == "POST":
+        number_of_questss = request.POST.get('number_of_quests')
+        profile_pic = request.FILES.get('profile_pic')
+        bug = request.POST.get('problem_report')
+        improvements = request.POST.get('improvements')
+        #userAvatar = request.POST.get('user_avatar')
+        if number_of_questss:
+            is_valid_settings = await sync_to_async(form.is_valid)()
+            if is_valid_settings:
+                user.base_number_of_quests = number_of_questss
+                user.weekly_quests_count = (int(number_of_questss) * 7)
+                user.target_num_quests = (int(number_of_questss) / 2)
+                await sync_to_async(user.save)()
+                return redirect("dashboard", username=username)
+            else:
+                return redirect('settings', username=username)
+        if profile_pic:
+            file = profile_pic.name
+            jpeg_filename = file.replace(".heic", ".jpeg").replace(".HEIC", ".jpeg")
+            output_path = os.path.join(MEDIA_ROOT, f"profile_pics/{user.id}", jpeg_filename)
+            #print("FILES RECEIVED:", request.FILES)
+            if file.lower().endswith(".heic"):
+                #print("YES")
+                heif_image = pillow_heif.read_heif(profile_pic)
+                image = Image.frombytes(
+                    heif_image.mode,
+                    heif_image.size,
+                    heif_image.data,
+                    "raw",
+                    heif_image.mode,
+                    heif_image.stride,
+                )
+                image.save(output_path, "JPEG", quality=85)
+                relative_path = os.path.join(f"profile_pics/{user.id}", jpeg_filename)
+                user.profile_picture = relative_path
+            else:
+                user.profile_picture = profile_pic
+
+            await sync_to_async(user.save)()
+            return redirect("dashboard", username=username)
+        if bug:
+            WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
+            message = {
+                "content": f"🔔 New bug reported in LevelUp: {bug}",
+                "username": "LevelUp Bot"
+            }
+            requests.post(WEBHOOK_URL, json=message)
+            return redirect("dashboard", username=username)
+        if improvements:
+            WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
+            message = {
+                "content": f"🔔 New improvement reported in LevelUp: {improvements}",
+                "username": "LevelUp Bot"
+            }
+            requests.post(WEBHOOK_URL, json=message)
+            return redirect("dashboard", username=username)
+
+    return render(request, "settings.html", {'user': user, 'character': character, "form": form})
+
 
 @login_required
 @require_POST
@@ -2316,30 +2402,7 @@ def fuel_My_Fire(request):
         return HttpResponseBadRequest(f"Bad request: {e}")
 
 
-
-# blog
-
-def blogView(request):
-    query = request.GET.get('q')
-    if query:
-        posts = BlogPost.objects.filter(
-            Q(title__icontains=query) |
-            Q(content__icontains=query) |
-            Q(tags__icontains=query)
-        )
-    else:
-        posts = BlogPost.objects.all()
-    return render(request, "blog.html", {"blogs": posts})
-
-
-def blog_detail(request, slug):
-    post = get_object_or_404(BlogPost, slug=slug)
-    return render(request, 'blogDetail.html', {'post': post})
-
-
 #  bug
-
-
 def bugs(request):
     bugs = BugsModel.objects.all()
     return render(request, 'bugs.html', {'bugs': bugs})

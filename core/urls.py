@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/redeem/', views.collect_email, name='collect_email'),
     path('privacy/policy', views.privacyPolicy, name='privacyPolicy'),
     path('terms/service', views.termsService, name='termsService'),
+    # dashboard
     path('dashboard/<str:username>/', views.dashboardPage, name='dashboard'),
     path('login/', views.loginPage, name='login'),
     path('logout/', views.logoutPage, name='logout'),
@@ -20,12 +21,12 @@ urlpatterns = [
     path('dashboard/<str:username>/character/', views.characterPage, name='characterPage'),
     path('dashboard/<str:username>/character/talk/', views.characterTalk, name='characterTalk'),
 
-
-    path('dashboard/<str:username>/healthMotivation/', views.healthMotivation, name='healthMotivation'),
     # world map bellow.
     path('dashboard/<str:username>/worldMap/', views.worldMapPage, name='worldMapPage'),
-    # Ironstead town
+    # IRONSTEAD TOWN
     path('dashboard/<str:username>/ironstead/', views.ironsteadPage, name='ironsteadPage'),
+    path('dashboard/<str:username>/ironstead/logging/', views.ironsteadLogging, name='ironsteadLogging'),
+
     # Ironstead market
     path('dashboard/<str:username>/ironstead/market/', views.marketView, name='marketView'),
     path('dashboard/<str:username>/ironstead/market/items', views.marketViewSendItems, name='getMarketItems'),
@@ -35,14 +36,18 @@ urlpatterns = [
     # Ironstead training
     path('dashboard/<str:username>/ironstead/training/', views.trainingView, name='trainingView'),
     path('dashboard/<str:username>/ironstead/training/grab', views.trainingGrab, name='trainingGrab'),
-    # settings
-    path('dashboard/<str:username>/settings/', views.settings, name='settings'),
-    path('known/bugs', views.bugs, name='bugs'),
-
     #  guild
     path('dashboard/<str:username>/ironstead/guild/hall', views.ironsteadGuildHall, name='ironsteadGuild'),
     path('dashboard/<str:username>/ironstead/guild/hall/api', views.guildHallAPI, name='guildapi'),
     path('dashboard/<str:username>/npc', views.npc_chat_api, name='npc_chat_api'),
+
+    # STORMWATCH TOWN
+    path('dashboard/<str:username>/stormwatch/', views.stormwatchPage, name='stormwatchPage'),
+    path('dashboard/<str:username>/stormwatch/alchemist', views.swAlchemist, name='swAlchemist'),
+
+    # settings
+    path('dashboard/<str:username>/settings/', views.settings, name='settings'),
+    path('known/bugs', views.bugs, name='bugs'),
 
     #  adventure quests
     path('<str:username>/adventure/quest/', views.adventureQuests, name='adventureQuests'),

@@ -1,0 +1,29 @@
+
+    {% load static %}
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.05, maximum-scale=5,
+    user-scalable=yes, orientation=portrait">
+    <link rel="preload" href="{% static 'css/stormwatch.css' %}" as="style">
+    <link rel="icon" type="image/png" href="{% static 'img/LU.png' %}">
+
+
+    <meta name="viewport" content="width = device-width"/>
+    <link rel="stylesheet" href="{% static 'css/stormwatch.css' %}">
+
+    <div class="map-wrapper" data-page="map">
+        <div class="map">
+            <img src="{% static 'img/stormwatch.png' %}" alt="World Map" class="map-img">
+
+            <a href="{% url 'swAlchemist' username=user.username %}" class="area alchemist">Alchemist</a>
+            <a href="{% url 'blackSmithView' username=user.username %}" class="area stable">Stable</a>
+            <a href="{% url 'blackSmithView' username=user.username %}" class="area market">Market</a>
+            <a href="{% url 'ironsteadGuild' username=user.username%}" class="area guild">Guild</a>
+            <a href="{% url 'worldMapPage' username=user.username %}" class="area town">Leave Town</a>
+            <a href="{% url 'worldMapPage' username=user.username %}" class="area docks">Docks</a>
+            <a href="{% url 'worldMapPage' username=user.username %}" class="area quarry">Quarry</a>
+
+
+        </div>
+    </div>
+    <script src="{% static 'js/ironstead.js' %}"></script>

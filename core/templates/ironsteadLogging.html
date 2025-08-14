@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Logging Site
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/ironsteadLogging.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="username" content="{{ user.username }}">
+
+
+<div class="app">
+  <section class="station" aria-label="Tree Cutting Station">
+    <div class="left">
+      <div class="station-title">
+        <div class="icon" aria-hidden>🌲</div>
+        <div>
+          <h1>Ironstead Forest</h1>
+          <p class="lead">time-based harvesting. Pick a preset, choose skill, and start.</p>
+        </div>
+      </div>
+
+      <div>
+        <label for="presets" class="tiny">Presets (hours)</label>
+        <div class="presets" role="group" aria-label="Time presets" id="presets">
+          <!-- buttons injected by JS -->
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="skill-wrap" aria-live="polite">
+          <label for="skillRange">{{ woodSkill.name }} Skill: <span id="skillVal" class="est">{{ skill.efficiency }}</span></label>
+          <input id="skillRange" type="range" min="0" max="10" value="{{ skill.efficiency }}" disabled />
+          <div class="skill-badges" id="skillBadges">
+            <!-- badges injected by JS -->
+          </div>
+          <div class="tiny" style="margin-top:6px">Skill increases wood yield and chance for rare logs.</div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1">
+            <label class="tiny">Estimated Yield</label>
+            <div class="est" id="estimate">~ 18 wood</div>
+          </div>
+
+        </div>
+
+        <div class="row actions">
+          <button class="primary" id="startBtn" aria-pressed="false">Start Cutting</button>
+          <button class="ghost" id="stopBtn" disabled>Cancel</button>
+        </div>
+      </div>
+
+      <footer class="tiny">Tip: Higher skill & longer trips → better yield and higher rare-log chance.</footer>
+    </div>
+
+    <div class="right" aria-live="polite">
+      <div class="progress-wrap">
+        <label class="tiny">Progress</label>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="bar" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="countdown">
+          <div id="timeLeft">Not active</div>
+          <div id="percentLeft">0%</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="tiny">Inventory</label>
+        <div class="inventory" id="inventory">
+          <div class="inv-item" title="Wood">
+            <div>🪵</div>
+            <div class="inv-qty" id="woodQty">0</div>
+            <div class="tiny">Wood</div>
+          </div>
+
+          <div class="inv-item" title="Rare Logs">
+            <div>✨</div>
+            <div class="inv-qty" id="rareQty">0</div>
+            <div class="tiny">Rare Logs</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="tiny">Activity Log</label>
+        <div class="log" id="log">Station ready.</div>
+      </div>
+    </div>
+  </section>
+
+  <script src="{% static 'js/ironsteadLogging.js' %}"></script>
+</div>
+
+
+{% endblock %}

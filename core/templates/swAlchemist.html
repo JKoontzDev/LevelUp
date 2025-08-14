@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Alchemist Shop{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <h1>Welcome to the Alchemist Shop</h1>
+    <section id="buy-potions">
+        <h2>Buy Potions</h2>
+        <div class="potion-list" id="potion-list">
+            <!-- Potions will be dynamically added here -->
+        </div>
+    </section>
+    <section id="make-potion">
+        <h2>Make Your Own Potion</h2>
+        <div>
+            <h3>Select Ingredients</h3>
+            <div id="ingredients">
+                <!-- Ingredients will be dynamically added here -->
+            </div>
+        </div>
+        <div>
+            <h3>Select Tools</h3>
+            <div id="tools">
+                <!-- Tools will be dynamically added here -->
+            </div>
+        </div>
+        <button id="mix-button" class="challenge-btn">Mix Potion</button>
+        <div id="mix-result"></div>
+    </section>
+    <script>
+        // Define data (simulated for frontend)
+        const potions = [
+            { id: 1, name: "Healing Potion", description: "Restores health", price: 10, image: "{% static 'img/potion1.png' %}" },
+            { id: 2, name: "Mana Potion", description: "Restores mana", price: 15, image: "{% static 'img/potion2.png' %}" },
+            { id: 3, name: "Strength Elixir", description: "Boosts strength", price: 20, image: "{% static 'img/potion3.png' %}" }
+        ];
+
+        const ingredients = [
+            { id: 1, name: "Herb", image: "{% static 'img/herb.png' %}" },
+            { id: 2, name: "Crystal", image: "{% static 'img/crystal.png' %}" },
+            { id: 3, name: "Mushroom", image: "{% static 'img/mushroom.png' %}" }
+        ];
+
+        const tools = [
+            { id: 1, name: "Mortar and Pestle", image: "{% static 'img/mortar.png' %}" },
+            { id: 2, name: "Distiller", image: "{% static 'img/distiller.png' %}" }
+        ];
+
+        const recipes = [
+            { ingredients: [1, 2], tools: [1], result: "Healing Potion" },
+            { ingredients: [2, 3], tools: [2], result: "Mana Potion" },
+            { ingredients: [1, 3], tools: [1], result: "Strength Elixir" }
+        ];
+
+        let cart = [];
+
+        // Cart functions
+        function addToCart(potionId) {
+            const potion = potions.find(p => p.id === potionId);
+            if (potion) {
+                const cartItem = cart.find(item => item.id === potionId);
+                if (cartItem) {
+                    cartItem.quantity += 1;
+                } else {
+                    cart.push({ ...potion, quantity: 1 });
+                }
+                updateCartCount();
+                // Simulate backend call (replace with actual API call)
+                console.log(`Added ${potion.name} to cart`);
+            }
+        }
+
+        function updateCartCount() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count').textContent = totalItems;
+        }
+
+        // Populate sections on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate potions
+            const potionList = document.getElementById('potion-list');
+            potionList.style.display = 'grid';
+            potionList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
+            potionList.style.gap = '20px';
+            potions.forEach(potion => {
+                const card = document.createElement('div');
+                card.className = 'potion-card';
+                card.innerHTML = `
+                    <img src="${potion.image}" alt="${potion.name}">
+                    <h3>${potion.name}</h3>
+                    <p>${potion.description}</p>
+                    <p>Price: ${potion.price} gold</p>
+                    <button class="challenge-btn" onclick="addToCart(${potion.id})">Buy</button>
+                `;
+                potionList.appendChild(card);
+            });
+
+            // Populate ingredients
+            const ingredientsDiv = document.getElementById('ingredients');
+            ingredients.forEach(ingredient => {
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <input type="checkbox" value="${ingredient.id}">
+                    <img src="${ingredient.image}" alt="${ingredient.name}">
+                    ${ingredient.name}
+                `;
+                ingredientsDiv.appendChild(label);
+            });
+
+            // Populate tools
+            const toolsDiv = document.getElementById('tools');
+            tools.forEach(tool => {
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <input type="checkbox" value="${tool.id}">
+                    <img src="${tool.image}" alt="${tool.name}">
+                    ${tool.name}
+                `;
+                toolsDiv.appendChild(label);
+            });
+
+            // Mix button event listener
+            document.getElementById('mix-button').addEventListener('click', () => {
+                const selectedIngredients = Array.from(document.querySelectorAll('#ingredients input:checked')).map(input => parseInt(input.value));
+                const selectedTools = Array.from(document.querySelectorAll('#tools input:checked')).map(input => parseInt(input.value));
+                const result = mixPotion(selectedIngredients, selectedTools);
+                const mixResult = document.getElementById('mix-result');
+                mixResult.textContent = result;
+                // Add animation for result
+                mixResult.style.animation = 'pulse 0.5s';
+                setTimeout(() => { mixResult.style.animation = ''; }, 500);
+            });
+        });
+
+        // Mix potion function
+        function mixPotion(selectedIngredients, selectedTools) {
+            const matchingRecipe = recipes.find(recipe =>
+                arraysEqual(recipe.ingredients.sort(), selectedIngredients.sort()) &&
+                arraysEqual(recipe.tools.sort(), selectedTools.sort())
+            );
+            if (matchingRecipe) {
+                return `You created a ${matchingRecipe.result}!`;
+            } else {
+                return "Unknown combination";
+            }
+        }
+
+        // Helper function to compare arrays
+        function arraysEqual(a, b) {
+            return a.length === b.length && a.every((val, index) => val === b[index]);
+        }
+    </script>
+{% endblock %}

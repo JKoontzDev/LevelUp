@@ -14,11 +14,13 @@ from pathlib import Path
 import os
 import environ
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
-environ.Env.read_env()
+
+env.read_env(os.path.join(BASE_DIR, '.env'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -26,7 +28,11 @@ environ.Env.read_env()
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+if env("DJANGO_ENV") == "production":
+    DEBUG = False
+elif env("DJANGO_ENV") == "dev":
+    DEBUG = True
+
 
 ALLOWED_HOSTS = ['127.0.0.1', "levelupgame.org", "www.levelupgame.org", "localhost", "147.182.183.76"]
 
@@ -79,9 +85,7 @@ WSGI_APPLICATION = 'LevelUp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-
-if os.getenv("DJANGO_ENV", 'production') == "production":
+if env("DJANGO_ENV") == "production": #
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -151,24 +155,28 @@ SESSION_COOKIE_AGE = 6000
 
 # session ends when browser closes
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+if env("DJANGO_ENV") == "production":
+    # when action it stays on
+    SESSION_SAVE_EVERY_REQUEST = True
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = True
 
-# when action it stays on
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 31536000
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
-SECURE_SSL_REDIRECT = False
-SECURE_HSTS_SECONDS = 31536000
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+else:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'

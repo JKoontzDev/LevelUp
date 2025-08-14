@@ -200,12 +200,24 @@ class skillSet(models.Model):
     skill = models.ForeignKey('Skill', on_delete=models.CASCADE, null=True, blank=True)
     damage_modifier = models.FloatField(default=0, null=True, blank=True)
     healing_modifier = models.FloatField(default=0, null=True, blank=True)
-    efficiency = models.FloatField(default=0, validators=[MinValueValidator(1), MaxValueValidator(10)], null=True,
+    efficiency = models.FloatField(default=0, validators=[MinValueValidator(0.0), MaxValueValidator(10.0)], null=True,
                                    blank=True)
     dexterity = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.character} x {self.skill}"
+
+    def save(self, *args, **kwargs):
+        if self.efficiency is not None:
+            self.efficiency = round(self.efficiency, 2)
+        super().save(*args, **kwargs)
+
+    def upgradeWoodCutting(self, amount):
+        max_eff = 10.0
+        gain = amount * (max_eff - self.efficiency) / 12
+        self.efficiency = min(max_eff, self.efficiency + gain)
+        self.save()
+
 
 
 class BackpackItem(models.Model):

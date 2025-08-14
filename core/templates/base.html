@@ -12,10 +12,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" type="image/png" href="{% static 'img/sword.png' %}">
+    <link rel="preload" as="image" href="{{user.profile_picture.url}}">
 
 
 
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    <link rel="stylesheet preload" href="{% static 'css/base.css' %}">
 
     <title>
         {% block title %}
