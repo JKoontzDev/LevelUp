@@ -20,6 +20,7 @@ cron-descriptor==1.4.5
 dictdiffer==0.9.0
 Django~=4.2.17
 django-celery-beat==2.8.1
+django-environ==0.12.0
 django-timezone-field==7.1
 h11==0.14.0
 httpcore~=1.0.8
@@ -68,6 +69,5 @@ tortoise~=0.1.1
 psutil~=6.0.0
 greenlet~=3.0.3
 jinja2~=3.1.4
-cffi~=1.17.1
-
 environ~=1.0
+cffi~=1.17.1
