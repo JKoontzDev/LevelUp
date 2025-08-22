@@ -326,11 +326,19 @@ class BlogPostAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('created_at', 'author')
     ordering = ('-created_at',)
+    fieldsets = (
+        ('details', {'fields': ('title', 'author', 'created_at', 'updated_at')}),)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('title', 'author', 'created_at',),
+        }),
+    )
 
 
 
 @admin.register(userTestament)
-class BlogPostAdmin(admin.ModelAdmin):
+class userPostAdmin(admin.ModelAdmin):
     list_display = ('message', 'author',)
     search_fields = ('message', 'author',)
     fieldsets = (

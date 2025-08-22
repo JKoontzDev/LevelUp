@@ -41,7 +41,7 @@
       {% for blog in blogs %}
       <article data-tag="{{ blog.tags }}" data-title="{{ blog.title }}">
         <h2><a href="{% url 'blog_detail' blog.slug %}">{{ blog.title }}</a></h2>
-        <p><small>By {{ blog.author }} • <time datetime="{{ blog.created_at }}">{{ blog.updated_at }}</time></small></p>
+        <p><small>By {{ blog.author }} • <time datetime="{{ blog.created_at }}">{{ blog.created_at }}</time></small></p>
         <p>{{ blog.excerpt }}</p>
       </article>
       {% endfor %}
