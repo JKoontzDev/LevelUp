@@ -311,7 +311,7 @@ function startOnGet(){
 
       // percent counter
       let pct = 0;
-      console.log(totalSeconds)
+      //console.log(totalSeconds)
       if (totalSeconds){
         pct = Math.floor((elapsed / totalSeconds) * 100);
       }
@@ -323,7 +323,7 @@ function startOnGet(){
 
       // update countdown
       const remaining = Math.max(0, totalSeconds - elapsed);
-      console.log(`remaining ${remaining}`)
+      //console.log(`remaining ${remaining}`)
 
       document.getElementById('percentLeft').innerText = `${pct}%`;
       document.getElementById('timeLeft').innerText =
