@@ -4,6 +4,9 @@ const skillMultiplier = 0.08; // 8% per skill level
 const maxRareChance = 40; // percent
 const baseRare = 2; // base percent
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const start_time = document.querySelector('meta[name="start_time"]').content;
+const totalSeconds = document.querySelector('meta[name="seconds"]').content;
+
 const username = document.querySelector('meta[name="username"]').content;
 const url = `/dashboard/${username}/ironstead/logging/`
 let activeTask = null;
@@ -20,6 +23,7 @@ function qs(sel){ return document.querySelector(sel) }
 function qsa(sel){ return document.querySelectorAll(sel) }
 
 function init(){
+  //console.log("SUS")
   // render presets
   const presetsWrap = document.getElementById('presets');
   presets.forEach(h => {
@@ -105,56 +109,68 @@ function toggleFastMode(){
   log(`Fast mode ${fastMode ? 'enabled' : 'disabled'} (x${speedFactor})`);
 }
 
+
+function sendTimeToBack(time){
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Custom-Message': 'timeSave'
+        },
+        body: JSON.stringify({'time': time}),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json(); // Parse JSON response
+    })
+    .then(responseData => {
+        //console.log(responseData)
+        document.querySelector('meta[name="start_time"]').setAttribute("content", Math.floor(responseData.start_time));
+        document.querySelector('meta[name="seconds"]').setAttribute("content", responseData.duration_seconds);
+        //console.log(start_time);
+        //console.log(`totalSeconds update: ${totalSeconds}`);
+        startOnGet()
+    })
+
+}
+
+
 function startTask(){
-  if(activeTask) { log('Already active.'); return; }
   const hours = selectedHours;
-  const skill = Number(document.getElementById('skillRange').value);
-  const totalSeconds = hours * 3600;
-  // simulated seconds for timer ticks:
-  const tickRate = 1000; // ms
-  const ticksNeeded = Math.round(totalSeconds); // number of seconds
-  const startTime = Date.now();
-  let elapsed = 0;
-  // show UI
-  document.getElementById('startBtn').disabled = true;
-  document.getElementById('stopBtn').disabled = false;
-  document.getElementById('startBtn').setAttribute('aria-pressed','true');
-  log(`Worker sent for ${hours}h (Skill ${skill}).`);
-
-  activeTask = setInterval(()=>{
-    const now = Date.now();
-    const realElapsedSec = Math.floor((now - startTime) / 1000);
-    elapsed = fastMode ? realElapsedSec * speedFactor : realElapsedSec;
-    if(elapsed > totalSeconds) elapsed = totalSeconds;
-    const pct = Math.floor((elapsed / totalSeconds) * 100);
-    // update progress
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.querySelector('.progress').setAttribute('aria-valuenow', pct);
-    // update countdown
-    const remaining = Math.max(0, totalSeconds - elapsed);
-    document.getElementById('percentLeft').innerText = `${pct}%`;
-    document.getElementById('timeLeft').innerText = remaining > 0 ? secondsToHms(remaining) + ' left' : 'Completed';
-
-    if(elapsed >= totalSeconds){
-      finishTask(hours, skill);
-      clearInterval(activeTask); activeTask = null;
-      document.getElementById('startBtn').disabled = false;
-      document.getElementById('stopBtn').disabled = true;
-      document.getElementById('startBtn').setAttribute('aria-pressed','false');
-    }
-  }, tickRate);
+  //console.log(selectedHours)
+  sendTimeToBack(hours) // send start time for db
+  //console.log(hours);
 }
 
 function cancelTask(){
-  if(!activeTask){ log('No active task to cancel.'); return; }
-  clearInterval(activeTask); activeTask = null;
-  document.getElementById('progressBar').style.width = '0%';
-  document.getElementById('timeLeft').innerText = 'Cancelled';
-  document.getElementById('percentLeft').innerText = '0%';
-  document.getElementById('startBtn').disabled = false;
-  document.getElementById('stopBtn').disabled = true;
-  document.getElementById('startBtn').setAttribute('aria-pressed','false');
-  log('Task cancelled — you returned early.');
+   if(!activeTask){ log('No active task to cancel.'); return; }
+   fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Custom-Message': 'cancelTask'
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json(); // Parse JSON response
+    })
+    .then(responseData => {
+          clearInterval(activeTask); activeTask = null;
+          document.getElementById('progressBar').style.width = '0%';
+          document.getElementById('timeLeft').innerText = 'Cancelled';
+          document.getElementById('percentLeft').innerText = '0%';
+          document.getElementById('startBtn').disabled = false;
+          document.getElementById('stopBtn').disabled = true;
+          document.getElementById('startBtn').setAttribute('aria-pressed','false');
+          log('Task cancelled — you returned early.');
+    })
 }
 
 
@@ -200,7 +216,7 @@ async function addToInventory(wood, rare, time) {
     // Send update request to backend
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Custom-Message': 'addWood' },
       body: JSON.stringify({ wood, rare, "time": time})
     });
 
@@ -255,7 +271,81 @@ function secondsToHms(d){
   return `${s}s`;
 }
 
+
+function startOnGet(){
+    const start_time = document.querySelector('meta[name="start_time"]').content;
+    const totalSeconds = Number(document.querySelector('meta[name="seconds"]').content);
+    //console.log(`start_time: ${start_time}`);
+    const skill = Number(document.getElementById('skillRange').value);
+    const tickRate = 1000; // ms
+    const ticksNeeded = Math.round(totalSeconds);
+
+
+    let startTime = Number(start_time) * 1000;
+
+    let elapsed = 0;
+
+    // show UI
+    if (!start_time || start_time === "None" || !totalSeconds || totalSeconds === "None") {
+        // no active task
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('startBtn').setAttribute('aria-pressed', 'false');
+    } else {
+        // task in progress
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        document.getElementById('startBtn').setAttribute('aria-pressed', 'true');
+    }
+
+    if (!start_time || start_time === "None"){
+        return
+    }
+    activeTask = setInterval(() => {
+      const now = Date.now();
+      const realElapsedSec = Math.floor((now - startTime) / 1000);
+      elapsed = fastMode ? realElapsedSec * speedFactor : realElapsedSec;
+      //console.log(`Big elaped: ${elapsed}`)
+
+      if (elapsed > totalSeconds) elapsed = totalSeconds;
+
+      // percent counter
+      let pct = 0;
+      console.log(totalSeconds)
+      if (totalSeconds){
+        pct = Math.floor((elapsed / totalSeconds) * 100);
+      }
+      //console.log(pct)
+
+      // update progress
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.querySelector('.progress').setAttribute('aria-valuenow', pct);
+
+      // update countdown
+      const remaining = Math.max(0, totalSeconds - elapsed);
+      console.log(`remaining ${remaining}`)
+
+      document.getElementById('percentLeft').innerText = `${pct}%`;
+      document.getElementById('timeLeft').innerText =
+        remaining > 0 ? secondsToHms(remaining) + ' left' : 'Completed';
+
+      if (elapsed >= totalSeconds) {
+        const hours = totalSeconds / 3600;
+        finishTask(hours, skill);
+        clearInterval(activeTask);
+        activeTask = null;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('startBtn').setAttribute('aria-pressed', 'false');
+      }
+    }, tickRate);
+
+}
+
+
+
 (async () => {
+  startOnGet()
   const initialInv = await fetchInventory();
   //console.log(initialInv)
   renderInventory(initialInv);

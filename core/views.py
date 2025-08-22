@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 #from django.urls import reverse
 import requests
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.core.cache import cache
@@ -1011,7 +1012,8 @@ async def loginPage(request):
                     #print("asd")
                     username = reg_form.cleaned_data['username']
                     password = reg_form.cleaned_data['password1']
-                    user = await sync_to_async(CustomUser.objects.create_user)(username=username, password=password)
+                    email = reg_form.cleaned_data['email']
+                    user = await sync_to_async(CustomUser.objects.create_user)(username=username, password=password, email=email)
                     check = await sync_to_async(authenticate)(request, username=username, password=password)
                     #print(user)
                     if check is not None:
@@ -1025,6 +1027,12 @@ async def loginPage(request):
                         user1.character = new_character
                         await sync_to_async(user1.save)()
                         await sync_to_async(character.save)()
+                        WEBHOOK_URL = "https://discord.com/api/webhooks/1369297800138850406/WqLqnTk6IffdvCrW1RDCybmWOijjkYmbZaonxbGNKhvyPVEjmKwEL19S00p0N8sz12_H"
+                        message = {
+                            "content": f"🔔🦝 New User reported in LevelUp!: {username}",
+                            "username": "LevelUp Bot"
+                        }
+                        requests.post(WEBHOOK_URL, json=message)
                         return redirect('dashboard', username=username)
                 else:
                     reg_form.add_error(None, "Registration failed. Please check your inputs.")
@@ -1348,7 +1356,7 @@ async def worldMapPage(request, username):
     if username != current_user:
         return redirect(reverse('dashboard', kwargs={'username': current_user}))
     user, character = await get_user_character(username)
-    return render(request, "worldMap.html", {"character": character})
+    return render(request, "worldMap.html", {"character": character, "user": user})
 
 
 # IRONSTEAD IS PART OF FREE VERSION
@@ -1934,33 +1942,58 @@ async def ironsteadLogging(request, username):
     user, character = await get_user_character(current_user)
 
     if request.method == "POST":
+        message = request.headers.get('X-Custom-Message')
         data = json.loads(request.body.decode('utf-8'))
-        wood_amount = data.get('wood')
-        rare_wood = data.get('rare')
-        time = data.get('time')
-        # below adds the new efficiency
-        skillset = await skillSet.objects.aget(character_id=character.id, skill_id=5) #change in prod to wood cutting Id
-        await asyncio.to_thread(skillset.upgradeWoodCutting, time)
-        # below adds wood to inventory
-        #print(f"Wood:{wood_amount}, Rare:{rare_wood}")
-        if wood_amount:
-            backpack_item, created = await BackpackItem.objects.aget_or_create(
-                character=character,
-                item_id=19, # change in prod to item_id
-            )
-            if not created:
-                backpack_item.quantity += wood_amount
-                await backpack_item.asave()
-        if rare_wood:
-            backpack_item, created = await BackpackItem.objects.aget_or_create(
-                character=character,
-                item_id=28, # change in prod to item_id
-            )
-            if not created:
-                backpack_item.quantity += rare_wood
-                await backpack_item.asave()
-        return JsonResponse({"message": "good"})
+        if message == 'addWood':
+            wood_amount = data.get('wood')
+            rare_wood = data.get('rare')
+            time = data.get('time')
+            # below adds the new efficiency
+            skillset = await skillSet.objects.aget(character_id=character.id, skill_id=5) #change in prod to wood cutting Id
+            await asyncio.to_thread(skillset.upgradeWoodCutting, time)
+            # below adds wood to inventory
+            if wood_amount:
+                backpack_item, created = await BackpackItem.objects.aget_or_create(
+                    character=character,
+                    item_id=19, # change in prod to item_id
+                )
+                if not created:
+                    backpack_item.quantity += wood_amount
+                    await backpack_item.asave()
+            if rare_wood:
+                backpack_item, created = await BackpackItem.objects.aget_or_create(
+                    character=character,
+                    item_id=28, # change in prod to item_id
+                )
+                if not created:
+                    backpack_item.quantity += rare_wood
+                    await backpack_item.asave()
 
+            # remove timesave
+            time = await sync_to_async(lambda: loggingTimer.objects.filter(character=character.id).first())()
+
+            if time:
+                await sync_to_async(time.delete)()
+            return JsonResponse({"message": "good"})
+
+        # below makes new cutting task
+        elif message == 'timeSave':
+            hours = int(data.get('time', 0))
+            duration_seconds = hours * 3600
+            await sync_to_async(loggingTimer.objects.update_or_create)(
+                character=character,
+                defaults={
+                    "start_time": timezone.now(),
+                    "duration_seconds": min(duration_seconds, MAX_DURATION)
+                }
+            )
+            return JsonResponse({
+                "message": "good",
+                "start_time": timezone.now().timestamp(),
+                "duration_seconds": min(duration_seconds, MAX_DURATION)
+            })
+        else:
+            pass
     elif request.method == "GET":
         message = request.headers.get('X-Custom-Message')
         if message == 'inventory':
@@ -1977,10 +2010,29 @@ async def ironsteadLogging(request, username):
                 "wood": wood.quantity if wood else 0,
                 "rare": rare.quantity if rare else 0
             })
+
+        elif message == 'cancelTask':
+            time = await sync_to_async(lambda: loggingTimer.objects.filter(character=character.id).first())()
+            print(time)
+            print("Cancel")
+            if time:
+                await sync_to_async(time.delete)()
+            return JsonResponse({"Message": "good"})
+        # normal get
         else:
             wood_skill = await Skill.objects.aget(name="Wood Cutting")
             skill = await sync_to_async(skillSet.objects.filter(skill_id=5, character_id=character.id).first)() # change in prod
-            return render(request, "ironsteadLogging.html", {"user": user, "character": character, "skill": skill, "woodSkill": wood_skill})
+            # check if there is time (active task)
+            get_time = await loggingTimer.objects.filter(character=character).afirst()
+            start_time = get_time.start_time if get_time else None
+            if start_time:
+                dt_obj = start_time
+                unix_seconds = int(dt_obj.timestamp())
+            else:
+                unix_seconds = None
+            seconds = get_time.duration_seconds if get_time else None
+
+            return render(request, "ironsteadLogging.html", {"user": user, "character": character, "skill": skill, "woodSkill": wood_skill, "start_time": unix_seconds, 'seconds': seconds})
 
 
 #START OF STORMWATCH ROUTES(SUB REQUIRED)

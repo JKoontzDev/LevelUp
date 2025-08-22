@@ -79,6 +79,7 @@ body {
      background: transparent;
      color: #00b4d8;
      border: 2px solid #00b4d8;
+     align-content: center;
 }
  .cta-buttons a.secondary:hover {
      background: #00b4d8;

@@ -93,12 +93,12 @@
         <h3>Settings</h3>
         <a href="{% url 'settings' username=user.username %}"><button class="settingsButton">Go to settings</button></a>
     </section>
-
+    {% if character.dungeon_quest_available %}
     <section class="settings">
         <h3>adventure quest</h3>
         <a href="{% url 'adventureQuests' username=user.username %}"><button class="settingsButton">Go on adventure</button></a>
     </section>
-
+    {% endif %}
 
     <script src="{% static 'js/dashboard.js' %}"></script>
 

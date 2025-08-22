@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'LevelUp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-if env("DJANGO_ENV") == "production": #
+if env("DJANGO_ENV") == "production":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

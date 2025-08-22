@@ -4,9 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
-
 import random
-
 from django.core.exceptions import ValidationError
 from django.utils.text import get_valid_filename
 from PIL import Image
@@ -46,6 +44,21 @@ def validate_file_size(file):
 
 
 #  MODELS
+
+# ironstead logging tracking
+MAX_DURATION = 12 * 3600
+
+
+class loggingTimer(models.Model):
+    character = models.ForeignKey('Character', on_delete=models.CASCADE, null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    duration_seconds = models.IntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.duration_seconds and self.duration_seconds > MAX_DURATION:
+            self.duration_seconds = MAX_DURATION
+        super().save(*args, **kwargs)
+
 
 class Rank(models.Model):
     name = models.CharField(max_length=100)
@@ -680,6 +693,9 @@ class towns(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.region})"
+
+
+
 
 
 # fuel my fire
